@@ -1,9 +1,4 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
+@import "tailwindcss";
 
 .logo {
   height: 6em;
@@ -33,10 +28,13 @@
   }
 }
 
-.card {
-  padding: 2em;
+/*linear-gradient(#ff4500, #ff8c00, #ffd700)*/
+.magma-border-color {
+  /* Define magma colors: Red-Orange to Orange to Gold */
+  border-image: url("assets/cropped.png") 0.5;
+  padding: 20px;
 }
 
-.read-the-docs {
-  color: #888;
+.magma-border-right {
+  border-right: 3px solid;
 }
