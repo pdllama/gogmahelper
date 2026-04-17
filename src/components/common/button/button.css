@@ -1,0 +1,11 @@
+@keyframes rippleEffect {
+    0% {opacity: 0.5; transform: scale(0);}
+    100% {opacity: 0; transform: scale(20);}
+}
+
+.ripple-class {
+    border-radius: 50%; position: absolute; background-color: white; opacity: 0;
+}
+.ripple-class.active {
+    animation: rippleEffect 0.9s ease-out infinite;
+}
