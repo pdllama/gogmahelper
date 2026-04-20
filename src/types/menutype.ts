@@ -1,7 +1,8 @@
 
 // The main menus of the application
 
-enum menu { dashboard, skills, bonuses }
+enum menu { dashboard='dashboard', skills='skills', bonuses='bonuses' }
+
 
 const menu_labels = {
     [menu.dashboard]: "Dashboard",
@@ -9,4 +10,6 @@ const menu_labels = {
     [menu.bonuses]: "Bonuses"
 } as const
 
-export {menu, menu_labels}
+const menu_arr:menu[] = Object.keys(menu) as menu[]
+
+export {menu, menu_arr, menu_labels}

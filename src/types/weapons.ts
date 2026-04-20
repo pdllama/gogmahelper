@@ -1,4 +1,19 @@
-enum weapons {B, CB, DB, GL, GS, H, HBG, HH, IG, L, LBG, LS, SA, SnS}
+enum weapons {
+    B='bow', 
+    CB='charge_blade', 
+    DB='dual_blades', 
+    GL='gunlance', 
+    GS='great_sword', 
+    H='hammer', 
+    HBG='heavy_bowgun', 
+    HH='hunting_horn', 
+    IG='insect_glaive',
+    L='lance', 
+    LBG='light_bowgun', 
+    LS='long_sword', 
+    SA='switch_axe', 
+    SnS='sword_and_shield'
+}
 
 const weapon_labels = {
     [weapons.B]: "Bow",
@@ -15,6 +30,6 @@ const weapon_labels = {
     [weapons.LS]: "Long Sword",
     [weapons.SA]: "Switch Axe",
     [weapons.SnS]: "Sword and Shield"
-}
+} as const
 
 export {weapons, weapon_labels}

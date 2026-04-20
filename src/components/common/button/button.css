@@ -7,5 +7,5 @@
     border-radius: 50%; position: absolute; background-color: white; opacity: 0;
 }
 .ripple-class.active {
-    animation: rippleEffect 0.9s ease-out infinite;
+    animation: rippleEffect 0.9s ease-out forwards;
 }

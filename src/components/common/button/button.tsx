@@ -1,11 +1,13 @@
 import { MouseEvent, ReactNode, useEffect, useRef, useState } from "react"
 import "./button.css"
+import useDebouncedFunction from "../../../app/util/useDebounce";
 
 type ButtonProps = {
     children: ReactNode,
     classes: string,
     onClick: () => void,
-    disableRipple: boolean
+    disableRipple: boolean,
+    disabled: boolean
 }
 
 function change_ripple_size(span:any, button:any) {
@@ -18,36 +20,28 @@ function change_ripple_size(span:any, button:any) {
         span.style.height = (smallestDim/2).toString() + "px"
     }
 
-const spanOnClick = (e: MouseEvent, spanRef:any, buttonRef:any, onClick: () => void, toggleExpandedSpanState: (boolean)=>void) => {
+const spanOnClick = (e: MouseEvent, spanRef:any, buttonRef:any, onClick: () => void, toggleExpandedSpanState: ()=>void) => {
     change_ripple_size(spanRef, buttonRef)
-    const {left, top} = spanRef.getBoundingClientRect();
+    const {left, top} = buttonRef.getBoundingClientRect();
     const leftPosition = e.clientX - left
     const topPosition = e.clientY - top
 
     spanRef.style.left = leftPosition.toString() + "px"
     spanRef.style.top = topPosition.toString() + "px"
 
-    toggleExpandedSpanState(true)
+    toggleExpandedSpanState()
 
     onClick();
-
-    // setTimeout(() => {
-    //     if (spanRef !== null) { 
-    //         // If covers cases where clicking the button may transition
-    //         // into a state where the button is not actually rendered anymore.
-    //         console.log("FIRED")
-    //         spanRef.classList.remove("active")
-    //     }
-    // }, 600)
 }
 
-export default function Button({children, classes='', onClick=()=>{}, disableRipple=false }:ButtonProps) {
+export default function Button({children, classes='', onClick=()=>{}, disableRipple=false, disabled=false }:Partial<ButtonProps>) {
     const button = useRef(null)
     const span = useRef(null)
     const [expandedSpanState, setExpandedSpanState] = useState(false)
+    const expandFunction = useDebouncedFunction(() => setTimeout(() => {setExpandedSpanState(false)}), 600)
 
     useEffect(() => {
-        setTimeout(() => {setExpandedSpanState(false); console.log('HIT HERE')}, 600)
+        expandFunction()
     }, [expandedSpanState])
 
     return (
@@ -56,11 +50,12 @@ export default function Button({children, classes='', onClick=()=>{}, disableRip
         className={`
             relative 
             overflow-hidden 
+            ${disabled ? 'pointer-events-none' : ''}
             ${classes}
         `} 
         onClick={
             disableRipple ? onClick : 
-            (e: MouseEvent) => spanOnClick(e, span.current, button.current, onClick, () => setExpandedSpanState(!expandedSpanState))
+            (e: MouseEvent) => spanOnClick(e, span.current, button.current, onClick, () => {setExpandedSpanState(true)})
         }
     >
         <span ref={span} className={`z-5 ripple-class${expandedSpanState ? ' active' : ''}`}></span>

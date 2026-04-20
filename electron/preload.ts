@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     const [channel, ...omit] = args
     return ipcRenderer.invoke(channel, ...omit)
   },
+  get_weapon_file_names: () => ipcRenderer.invoke('get_weapon_file_names')
 
   // You can expose other APTs you need here.
   // ...

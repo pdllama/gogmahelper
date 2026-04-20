@@ -16,7 +16,8 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   invoke(...args) {
     const [channel, ...omit] = args;
     return electron.ipcRenderer.invoke(channel, ...omit);
-  }
+  },
+  get_weapon_file_names: () => electron.ipcRenderer.invoke("get_weapon_file_names")
   // You can expose other APTs you need here.
   // ...
 });

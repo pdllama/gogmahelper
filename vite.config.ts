@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { AliasOptions, defineConfig } from 'vite'
 import path from 'node:path'
 import electron from 'vite-plugin-electron/simple'
 import react from '@vitejs/plugin-react'
@@ -28,4 +28,10 @@ export default defineConfig({
         : {},
     }),
   ],
+  resolve: {
+    alias: {
+      '@components': path.resolve(__dirname, 'src/components'),
+      '@data': path.resolve(__dirname, 'src/data')
+    } as AliasOptions
+  }
 })

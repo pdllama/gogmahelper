@@ -18,7 +18,13 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Pathing */
+    "paths": {
+      "@data/*": ["./data/*"],
+      "@components/*": ["./src/components/*"]
+    }
   },
   "include": ["src", "electron"],
   "references": [{ "path": "./tsconfig.node.json" }]

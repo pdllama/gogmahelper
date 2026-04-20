@@ -1,7 +1,8 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { get_weapon_file_names } from './filereaders/get_weapon_files'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -70,5 +71,7 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
+ipcMain.handle('get_weapon_file_names', get_weapon_file_names)
 
 app.whenReady().then(createWindow)

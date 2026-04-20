@@ -2,14 +2,23 @@ import { useState } from 'react'
 import './App.css'
 import NavBar from './main/navbar/navbar'
 import { menu } from './types/menutype'
+import { weapons } from './types/weapons'
+import { elements } from './types/element'
+import MainWindow from './main/window/mainwindow'
+
+type WindowState = {
+  window: menu,
+  weapon: (weapons|null),
+  element: (elements|null)
+}
 
 function App() {
-  const [curr_menu, set_curr_menu] = useState(menu.dashboard)
+  const [window_state, set_window_state]= useState<WindowState>({window: menu.dashboard, weapon: null, element: null})
 
   return (
-    <div className='size-full'>
-      <NavBar menu={curr_menu} change_menu={(new_menu:menu) => set_curr_menu(new_menu)}/>
-
+    <div className='size-full flex'>
+      <NavBar menu={window_state.window} change_menu={(new_menu:menu) => set_window_state({...window_state, window: new_menu})}/>
+      <MainWindow/>
     </div>
   )
 }

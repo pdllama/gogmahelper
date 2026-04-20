@@ -1,7 +1,39 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import * as fs from "fs/promises";
+var weapons = /* @__PURE__ */ ((weapons2) => {
+  weapons2["B"] = "bow";
+  weapons2["CB"] = "charge_blade";
+  weapons2["DB"] = "dual_blades";
+  weapons2["GL"] = "gunlance";
+  weapons2["GS"] = "great_sword";
+  weapons2["H"] = "hammer";
+  weapons2["HBG"] = "heavy_bowgun";
+  weapons2["HH"] = "hunting_horn";
+  weapons2["IG"] = "insect_glaive";
+  weapons2["L"] = "lance";
+  weapons2["LBG"] = "light_bowgun";
+  weapons2["LS"] = "long_sword";
+  weapons2["SA"] = "switch_axe";
+  weapons2["SnS"] = "sword_and_shield";
+  return weapons2;
+})(weapons || {});
+async function get_weapon_file_names() {
+  try {
+    const files = await fs.readdir("data");
+    const formatted = files.map((f) => f.slice(0, f.indexOf(".")));
+    const actualWeapons = formatted.filter((f) => Object.keys(weapons).includes(f));
+    return actualWeapons;
+  } catch (error) {
+    console.log(error.code);
+    if (error.code == "ENOENT") {
+      return [];
+    }
+    return [];
+  }
+}
 createRequire(import.meta.url);
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
@@ -41,6 +73,7 @@ app.on("activate", () => {
     createWindow();
   }
 });
+ipcMain.handle("get_weapon_file_names", get_weapon_file_names);
 app.whenReady().then(createWindow);
 export {
   MAIN_DIST,
