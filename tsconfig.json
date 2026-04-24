@@ -23,9 +23,12 @@
     /* Pathing */
     "paths": {
       "@data/*": ["./data/*"],
-      "@components/*": ["./src/components/*"]
+      "@components/*": ["./src/components/*"],
+      "@custom_types/*": ["./src/types/*"],
+      "@file_readers/*": ["./file/filereaders/*"],
+      "@file_writers/*": ["./file/filewriters/*"]
     }
   },
-  "include": ["src", "electron"],
+  "include": ["src", "electron", "file"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

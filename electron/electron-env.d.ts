@@ -21,7 +21,15 @@ declare namespace NodeJS {
   }
 }
 
+interface api {
+  on(channel: string, listener: (...args: any[]) => void): void
+  off(channel: string, listener: (...args: any[]) => void): void
+  send(channel: string, ...args: any[]): void
+  invoke(channel: string, ...args: any[]): Promise<any>
+  get_weapon_file_names(): Promise<any>
+}
+
 // Used in Renderer process, expose in `preload.ts`
 interface Window {
-  ipcRenderer: import('electron').IpcRenderer
+  ipcRenderer: api
 }

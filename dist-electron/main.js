@@ -24,10 +24,22 @@ async function get_weapon_file_names() {
   try {
     const files = await fs.readdir("data");
     const formatted = files.map((f) => f.slice(0, f.indexOf(".")));
-    const actualWeapons = formatted.filter((f) => Object.keys(weapons).includes(f));
-    return actualWeapons;
+    const actualWeapons = formatted.filter((f) => Object.values(weapons).map((w) => w.toString()).includes(f));
+    const type_map = {};
+    for (let f of actualWeapons) {
+      const json = await fs.readFile(`data/${f}.json`, "utf-8").then((f2) => JSON.parse(f2));
+      if (json.skills != void 0 && json.bonuses != void 0) {
+        type_map[f] = "both";
+      } else if (json.skills != void 0) {
+        type_map[f] = "skills";
+      } else if (json.bonuses != void 0) {
+        type_map[f] = "bonuses";
+      } else {
+        type_map[f] = "none";
+      }
+    }
+    return { actualWeapons, type_map };
   } catch (error) {
-    console.log(error.code);
     if (error.code == "ENOENT") {
       return [];
     }

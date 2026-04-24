@@ -2,7 +2,8 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import { get_weapon_file_names } from './filereaders/get_weapon_files'
+import { get_weapon_file_names } from '@file_readers/get_weapon_files'
+import preference_check from '@file_writers/auto/recreate_preferences'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))

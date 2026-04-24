@@ -18,7 +18,14 @@ function App() {
   return (
     <div className='size-full flex'>
       <NavBar menu={window_state.window} change_menu={(new_menu:menu) => set_window_state({...window_state, window: new_menu})}/>
-      <MainWindow/>
+      <MainWindow 
+        menu={window_state.window} 
+        weapon={window_state.weapon} 
+        element={window_state.element} 
+        changeWeaponCombo={(newWep:weapons, newEle:elements) => {
+          set_window_state({...window_state, weapon: newWep, element: newEle})
+        }}
+      />
     </div>
   )
 }
