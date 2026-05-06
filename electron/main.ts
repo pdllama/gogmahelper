@@ -1,11 +1,12 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import { get_weapon_file_names } from '@file_readers/get_weapon_files'
-import preference_check from '@file_writers/auto/recreate_preferences'
+import AppDatabase from '../src/app/database'
+import Database from 'better-sqlite3'
+import { weapons } from '@custom_types/weapons'
+import { elements } from '@custom_types/element'
+import { roll_type } from '@custom_types/rolltype'
 
-const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -30,7 +31,7 @@ let win: BrowserWindow | null
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'icons/appicon.png'),
+    icon: path.join(process.env.VITE_PUBLIC as string, 'icons/appicon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
@@ -73,6 +74,15 @@ app.on('activate', () => {
   }
 })
 
-ipcMain.handle('get_weapon_file_names', get_weapon_file_names)
 
-app.whenReady().then(createWindow)
+
+app.whenReady().then(() => {
+  const dbPath = path.join(app.getPath('userData'), 'gogmahelper.db')
+  const db:AppDatabase = new AppDatabase(new Database(dbPath))
+
+  ipcMain.handle('initialize_app_state', () => {return {...db.initialize_stats(), ...db.initialize_preferences()}})
+  ipcMain.handle('add_weapon_roller', (_:any, weapon:weapons, element:elements, rollType:roll_type) => db.add_weapon(weapon, element, rollType))
+  createWindow()
+}).catch(err => {
+  console.log(err)
+})

@@ -1,4 +1,4 @@
-import { MouseEvent, ReactNode, useEffect, useRef, useState } from "react"
+import { MouseEvent, MutableRefObject, ReactNode, useEffect, useRef, useState } from "react"
 import "./button.css"
 import useDebouncedFunction from "../../../app/util/useDebounce";
 
@@ -7,7 +7,8 @@ type ButtonProps = {
     classes: string,
     onClick: () => void,
     disableRipple: boolean,
-    disabled: boolean
+    disabled: boolean,
+    ref:MutableRefObject<HTMLButtonElement|null>
 }
 
 function change_ripple_size(span:any, button:any) {
@@ -34,7 +35,7 @@ const spanOnClick = (e: MouseEvent, spanRef:any, buttonRef:any, onClick: () => v
     onClick();
 }
 
-export default function Button({children, classes='', onClick=()=>{}, disableRipple=false, disabled=false }:Partial<ButtonProps>) {
+export default function Button({children, classes='', onClick=()=>{}, disableRipple=false, disabled=false, ref }:Partial<ButtonProps>) {
     const button = useRef(null)
     const span = useRef(null)
     const [expandedSpanState, setExpandedSpanState] = useState(false)
@@ -46,7 +47,7 @@ export default function Button({children, classes='', onClick=()=>{}, disableRip
 
     return (
     <button 
-        ref={button} 
+        ref={ref !== undefined ? ref : button} 
         className={`
             relative 
             overflow-hidden 

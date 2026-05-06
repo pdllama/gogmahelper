@@ -1,31 +1,28 @@
 import Text from "@components/common/text/text"
-import { elements } from "@custom_types/element"
-import { WindowProp } from "@custom_types/props/window"
+import GridWrapper from "@components/display/gridwrapper"
+import NewRollDisplay from "@components/display/weaponrolls/newrolldisplay"
+import SkillRollDisplay from "@components/display/weaponrolls/skillrolldisplay"
+import { roll_type } from "@custom_types/rolltype"
 import { weapons } from "@custom_types/weapons"
-import type { weapon_skill_stat} from "@custom_types/rolltype"
-import { useEffect, useState } from "react"
+import { useMainStore } from "../../app/main_store"
+import { useShallow } from "zustand/shallow"
 
 
 
 
-type SkillsState = {
-    weapon_stats: weapon_skill_stat|null // This will be computed on startup. 
-}
+export default function Skills({}) {
 
-
-const get_weapon_stats = () => {
-
-}
-
-export default function Skills({weapon_files, type_map, remove_weapon, add_weapon, weapon, element}:WindowProp) {
-
-    const [skills_state, set_skills_state] = useState<SkillsState>({weapon_stats: null})
-
-    useEffect(() => {
-
-    }, [])
+    const weapons_with_skill_rolls = useMainStore(useShallow(state => Object.keys(state.skill_stats))) as weapons[]
 
     return <>
         <Text size='3xl' bold>Roll Skills</Text>
+        <div className='w-full flex flex-col'>
+            <Text size="xl" bold classes='text-start ml-3'>Rolls</Text>
+            <GridWrapper>
+                {weapons_with_skill_rolls.map((w:weapons) => <SkillRollDisplay key={`${w}-skill-display`} weapon={w}/>)}
+                {weapons_with_skill_rolls.length !== 14 && <NewRollDisplay current_weapons={weapons_with_skill_rolls} rollType={roll_type.SKILLS}/>}
+            </GridWrapper>
+        </div>
+        
     </>
 }

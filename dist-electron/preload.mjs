@@ -17,7 +17,8 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
     const [channel, ...omit] = args;
     return electron.ipcRenderer.invoke(channel, ...omit);
   },
-  get_weapon_file_names: () => electron.ipcRenderer.invoke("get_weapon_file_names")
+  initialize_app_state: () => electron.ipcRenderer.invoke("initialize_app_state"),
+  add_weapon_roller: (weapon, element, rollType) => electron.ipcRenderer.invoke("add_weapon_roller", weapon, element, rollType)
   // You can expose other APTs you need here.
   // ...
 });

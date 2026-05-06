@@ -15,7 +15,12 @@ export default defineConfig({
         // Shortcut of `build.lib.entry`.
         entry: 'electron/main.ts',
         vite: {
-          plugins: [tsconfigPaths()]
+          plugins: [tsconfigPaths()],
+          build: {
+            rollupOptions: {
+              external: ['better-sqlite3']
+            }
+          }
         }
       },
       preload: {
@@ -23,7 +28,12 @@ export default defineConfig({
         // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
         input: path.join(__dirname, 'electron/preload.ts'),
         vite: {
-          plugins: [tsconfigPaths()]
+          plugins: [tsconfigPaths()],
+          build: {
+            rollupOptions: {
+              external: ['better-sqlite3']
+            }
+          }
         }
       },
       // Ployfill the Electron and Node.js API for Renderer process.

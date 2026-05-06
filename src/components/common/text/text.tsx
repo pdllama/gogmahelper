@@ -5,7 +5,8 @@ type TextProps = Partial<{
     classes:string,
     size:string|number,
     children:ReactNode,
-    bold:boolean
+    bold:boolean,
+    center:boolean
 }>
 
 const fontSize = {
@@ -25,12 +26,11 @@ const fontSize = {
 
 type FontSizeMap = typeof fontSize
 
-export default function Text({classes='', size=14, children, bold=false}:TextProps) {
+export default function Text({classes='', size=14, children, bold=false, center=false}:TextProps) {
 
     const parsedFontSize = typeof size == 'number' ? `${size}px` : fontSize[size as keyof FontSizeMap] == undefined ? '14px' : fontSize[size as keyof FontSizeMap]
 
-//style={{fontSize: size}} 
     return (
-        <p style={{fontSize: parsedFontSize}} className={`flex items-center justify-center text-wrap ${bold ? 'font-bold' : ''} ${classes}`}>{children}</p>
+        <p style={{fontSize: parsedFontSize}} className={`${center ? 'flex items-center justify-center' : ''} text-wrap ${bold ? 'font-bold' : ''} ${classes}`}>{children}</p>
     )
 }

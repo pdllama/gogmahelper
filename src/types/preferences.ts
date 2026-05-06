@@ -1,5 +1,5 @@
 import { elements } from "./element"
-import { bonus_roll, skill_roll } from "./rolltype"
+import { skill_roll, bonus_roll, roll_type_other, set_bonus_skill, group_bonus_skill } from "./rolltype"
 import { weapons } from "./weapons"
 
 // Preferences refers to which skill rolls / bonus rolls the user is looking for. 
@@ -29,7 +29,7 @@ type list_of_bonus_applied_preferences = Array<{specificity:preference_specifici
 
 // For the page where you can edit preferences, we will want to naturally segment the preferences based on specificity.
 // This is an alternate version of preferences which segments it based its level of specificity. 
-type skill_rolls_array = Array<skill_roll>
+type skill_rolls_array = Array<{weapon:weapons|null, element:elements|null, set_bonus:set_bonus_skill, group_bonus:group_bonus_skill}>
 
 type specificity_segmented_skill_preferences = {
     any: skill_rolls_array,
@@ -51,7 +51,7 @@ type specificity_segmented_skill_preferences = {
 
 
 // This is another version of specificty_segmented_skill_preferences applied to bonuses instead.
-type bonus_rolls_array = Array<bonus_roll>
+type bonus_rolls_array = Array<{weapon:weapons|null, element:elements|null, reinforcements:roll_type_other.five_reinforcement_rolls}>
 
 type specificity_segmented_bonus_preferences = {
     any: bonus_rolls_array,
@@ -65,15 +65,9 @@ type specificity_segmented_bonus_preferences = {
 
 //This is the structure of preferences.json
 
-type preferences_json = {
-    skills: specificity_segmented_skill_preferences,
-    bonuses: specificity_segmented_bonus_preferences
-}
-
 export type {
     preference_specificity, 
     specificity_segmented_skill_preferences, specificity_segmented_bonus_preferences,
     skill_rolls_array, bonus_rolls_array,
-    list_of_applied_preferences, list_of_skill_applied_preferences, list_of_bonus_applied_preferences,
-    preferences_json
+    list_of_applied_preferences, list_of_skill_applied_preferences, list_of_bonus_applied_preferences
 }

@@ -9,3 +9,7 @@
 .ripple-class.active {
     animation: rippleEffect 0.9s ease-out forwards;
 }
+
+.darken:hover {
+    background-color:rgba(0,0,0, 0.5)
+}

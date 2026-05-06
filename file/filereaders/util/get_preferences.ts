@@ -1,5 +1,6 @@
 import { elements } from "@custom_types/element";
-import { list_of_applied_preferences, preference_specificity, preferences_json } from "@custom_types/preferences";
+import { list_of_applied_preferences, preference_specificity } from "@custom_types/preferences";
+import { preferences_json } from "@file/file_types"
 import { roll_type as rollType } from "@custom_types/rolltype";
 import { weapons } from "@custom_types/weapons";
 import { readFile } from "fs/promises";

@@ -1,3 +1,6 @@
+import { elements } from '@custom_types/element'
+import { roll_type } from '@custom_types/rolltype'
+import { weapons } from '@custom_types/weapons'
 import { ipcRenderer, contextBridge } from 'electron'
 
 // --------- Expose some API to the Renderer process ---------
@@ -18,7 +21,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     const [channel, ...omit] = args
     return ipcRenderer.invoke(channel, ...omit)
   },
-  get_weapon_file_names: () => ipcRenderer.invoke('get_weapon_file_names')
+  initialize_app_state: () => ipcRenderer.invoke('initialize_app_state'),
+  add_weapon_roller: (weapon:weapons, element:elements, rollType:roll_type) => ipcRenderer.invoke('add_weapon_roller', weapon, element, rollType)
 
   // You can expose other APTs you need here.
   // ...

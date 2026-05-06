@@ -1,0 +1,8 @@
+.grid-min-height {
+    min-height: 200px;
+}
+
+.grid-max-width {
+    width: 100%;
+    max-width: 300px;
+}
