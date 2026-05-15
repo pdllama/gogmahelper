@@ -13,14 +13,16 @@ type skill_stats_query = {
     weapon:weapons, 
     element:elements,
     num_rolls:number,
-    god_rolls: Array<{roll_num: number, set_bonus: set_bonus_skill, group_bonus: group_bonus_skill}>
+    // god_rolls: Array<{roll_num: number, set_bonus: set_bonus_skill, group_bonus: group_bonus_skill}>
+    god_rolls: string // actually comes out as a string
 }
 type amend_bonus_stats_query = {
     weapon:weapons, 
     element:elements,
     num_rolls:number,
     // reinforcement and levels comes out as ex. "SHARP ELE ATK ATK AFF" "EX 3 EX EX 2". It is less storage to do so.
-    god_rolls: Array<{roll_num: number, reinforcements: string, reinforcement_levels: string}>
+    // god_rolls: Array<{roll_num: number, reinforcements: string, reinforcement_levels: string}>
+    god_rolls:string // actually comes out as a string
 }
 type keep_bonus_stats_query = {
     keep_id:string, // uuid
@@ -54,7 +56,7 @@ class AppDatabase {
             if (skill_stats[result.weapon] === undefined) {
                 skill_stats[result.weapon] = {}
             }
-            skill_stats[result.weapon]![result.element] = {num_rolls:result.num_rolls, god_rolls: result.god_rolls};
+            skill_stats[result.weapon]![result.element] = {num_rolls:result.num_rolls, god_rolls: JSON.parse(result.god_rolls) as Array<{roll_num: number, set_bonus: set_bonus_skill, group_bonus: group_bonus_skill}>};
         }
 
         const amend_bonus_stats:weapon_bonus_stat = {}
@@ -64,7 +66,9 @@ class AppDatabase {
             }
             amend_bonus_stats[result.weapon]![result.element] = {
                 num_rolls: result.num_rolls, 
-                god_rolls: result.god_rolls.map((gr) => {
+                god_rolls: JSON.parse(result.god_rolls).map((gr:{roll_num: number, reinforcements: string, reinforcement_levels: string}) => {
+                    console.log(gr)
+                    console.log('GR ABOVE')
                     return {roll_num: gr.roll_num, roll: gogma_database.convert_db_reinforcements_to_app(gr.reinforcements, gr.reinforcement_levels)}
                 })
             } 
@@ -72,7 +76,7 @@ class AppDatabase {
 
         const keep_bonus_stats:keep_bonus_stat = {}
         const keep_bonus_profiles:Record<string, keep_bonus_profile> = {}
-        for (let result of this.db.prepare<[], keep_bonus_stats_query>(gogma_database.amend_stats_query).all()) {
+        for (let result of this.db.prepare<[], keep_bonus_stats_query>(gogma_database.keep_stats_query).all()) {
             keep_bonus_profiles[result.keep_id] = {
                 name: result.name,
                 weapon: result.weapon,
@@ -86,7 +90,7 @@ class AppDatabase {
             }
         }
 
-        return {ss: skill_stats, bs: keep_bonus_stats, kbs: keep_bonus_stats, kbp: keep_bonus_profiles}
+        return {ss: skill_stats, bs: amend_bonus_stats, kbs: keep_bonus_stats, kbp: keep_bonus_profiles}
     }
     initialize_preferences() {
         return {
@@ -135,8 +139,6 @@ class AppDatabase {
 
         const profile_id = gogma_database.get_profile_id(this.db, weapon, element, true); // This inserts the weapon profile if it is not there.
 
-        console.log(profile_id)
-
         // We need a dummy roll in the database (based on roll_type) so that when the app launches, the stat initialization recognizes the combo as a skill/amend bonus rolling combo.
         // These are initialized with empty set/group bonuses / reinforcements so they are never triggered as god rolls, and we filter them out when counting the number of rolls done.
         // Just need to make sure to always filter out roll #0 when doing roll queries.
@@ -144,11 +146,32 @@ class AppDatabase {
         const insert_query = rollType === roll_type.SKILLS ? `INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (0, ${profile_id}, '', '')` : 
             `INSERT INTO amend_bonus_rolls(roll_num, profile_id, reinforcements, reinforcement_levels, reinforcements_canonical) VALUES (0, ${profile_id}, '', '', '')`
 
-        console.log(insert_query);
-        console.log(rollType);
-
         this.db.exec(insert_query)
         
+    }
+
+    remove_weapon(weapon:weapons, rollType: roll_type) {
+        // Removes all rolls of a given weapon and rollType, regardless of element.
+        // We do NOT remove the weapon profile in case other tables are using it. We can just leave it open.
+        this.db.exec(`
+            DELETE FROM ${rollType === roll_type.SKILLS ? 'skill_rolls' : 'amend_bonus_rolls'} 
+            WHERE profile_id IN (
+                SELECT wp.profile_id
+                FROM weapon_profile wp
+                WHERE weapon = '${weapon}'
+            )`)
+    }
+
+    remove_combo(weapon:weapons, element:elements, rollType:roll_type) {
+        // Removes all rolls of a given weapon, element, and rollType. Never removes weapon profile, just all its rolls. 
+        this.db.exec(`
+                DELETE FROM ${rollType === roll_type.SKILLS ? 'skill_rolls' : 'amend_bonus_rolls'}
+                WHERE profile_id IN (
+                    SELECT wp.profile_id
+                    FROM weapon_profile wp
+                    WHERE weapon = '${weapon}' AND element = '${element}'
+                )
+            `)
     }
 
 }

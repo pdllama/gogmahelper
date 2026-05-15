@@ -25,6 +25,7 @@
       "@data/*": ["./data/*"],
       "@components/*": ["./src/components/*"],
       "@custom_types/*": ["./src/types/*"],
+      "@app/*": ["./src/app/*"],
       "@file/*": ["./file/*"],
       "@file_readers/*": ["./file/filereaders/*"],
       "@file_writers/*": ["./file/filewriters/*"]

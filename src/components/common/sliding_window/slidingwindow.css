@@ -1,0 +1,25 @@
+
+.slide-down {
+    transition-property: top;
+    transition-duration: 0.5s;
+}
+
+.slide-up {
+    transition-property: top;
+    transition-duration: 0.5s;
+}
+
+.slide-left {
+    transition-property: right;
+    transition-duration: 0.5s;
+}
+
+.slide-right {
+    transition-property: right;
+    transition-duration: 0.5s;
+}
+
+.fade {
+    transition-property: opacity;
+    transition-duration: 0.5s;
+}

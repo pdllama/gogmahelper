@@ -12,6 +12,16 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --water-color: #6F99BB;
+  --fire-color: #C16970;
+  --thunder-color: #B7AB69;
+  --ice-color: #7CAAAB;
+  --dragon-color: #6E5C92;
+  --blast-color: #A87550;
+  --poison-color: #5B2C6C;
+  --paralysis-color: #D2C078;
+  --sleep-color: #5A78B1;
 }
 
 #root {

@@ -36,3 +36,90 @@
   border-right: 3px solid;
 }
 
+.text-water {
+  color: var(--water-color);
+}
+.text-fire {
+  color: var(--fire-color);
+}
+.text-thunder {
+  color: var(--thunder-color);
+}
+.text-ice {
+  color: var(--ice-color);
+}
+.text-dragon {
+  color: var(--dragon-color);
+}
+.text-paralysis {
+  color: var(--paralysis-color);
+}
+.text-blast {
+  color: var(--blast-color);
+}
+.text-poison {
+  color: var(--poison-color);
+}
+.text-sleep {
+  color: var(--sleep-color);
+}
+
+
+
+.bg-water {
+  background-color: var(--water-color);
+}
+.bg-fire {
+  background-color: var(--fire-color);
+}
+.bg-thunder {
+  background-color: var(--thunder-color);
+}
+.bg-ice {
+  background-color: var(--ice-color);
+}
+.bg-dragon {
+  background-color: var(--dragon-color);
+}
+.bg-paralysis {
+  background-color: var(--paralysis-color);
+}
+.bg-blast {
+  background-color: var(--blast-color);
+}
+.bg-poison {
+  background-color: var(--poison-color);
+}
+.bg-sleep {
+  background-color: var(--sleep-color);
+}
+
+
+
+.hover-bg-water:hover {
+  background-color: color-mix(in srgb, var(--water-color) 20%, transparent);
+}
+.hover-bg-fire:hover {
+  background-color: color-mix(in srgb, var(--fire-color) 20%, transparent);
+}
+.hover-bg-thunder:hover {
+  background-color: color-mix(in srgb, var(--thunder-color) 20%, transparent);
+}
+.hover-bg-ice:hover {
+  background-color: color-mix(in srgb, var(--ice-color) 20%, transparent);
+}
+.hover-bg-dragon:hover {
+  background-color: color-mix(in srgb, var(--dragon-color) 20%, transparent);
+}
+.hover-bg-paralysis:hover {
+  background-color: color-mix(in srgb, var(--paralysis-color) 20%, transparent);
+}
+.hover-bg-blast:hover {
+  background-color: color-mix(in srgb, var(--blast-color) 20%, transparent);
+}
+.hover-bg-poison:hover {
+  background-color: color-mix(in srgb, var(--poison-color) 20%, transparent);
+}
+.hover-bg-sleep:hover {
+  background-color: color-mix(in srgb, var(--sleep-color) 20%, transparent);
+}

@@ -9,9 +9,9 @@ export function AlertArea({}) {
     const remove_alert = useAlertStore(state => state.remove_alert)
 
     return (
-        <div className="pointer-events-none w-[30%] min-w-[150px] max-w-[300px] absolute m-2 bottom-[0px] right-[0px] flex flex-col-reverse">
+        <div className="pointer-events-none w-[30%] min-w-[150px] max-w-[300px] absolute m-2 bottom-[0px] right-[0px] flex flex-col-reverse z-50 gap-1">
             {alerts.map((alert:AlertType) => 
-                <Alert title={alert.title} content={alert.content} alert_id={alert.alert_id} type={alert.type} timeout={alert.timeout} remove_alert={remove_alert}/>
+                <Alert key={`alert-${alert.alert_id}`} title={alert.title} content={alert.content} alert_id={alert.alert_id} type={alert.type} timeout={alert.timeout} remove_alert={remove_alert}/>
             )}
         </div>
     )
@@ -29,7 +29,9 @@ export function Alert({title='', content='', alert_id='', type='success', timeou
     useEffect(() => {
         setTimeout(() => {
             const div = alert_ref.current as HTMLDivElement
-            div.style.opacity = "0"
+            if (div) {
+                div.style.opacity = "0"
+            }
             setTimeout(() => {
                 remove_alert(alert_id)
             }, (timeout/2)*1000)

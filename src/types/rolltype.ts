@@ -94,7 +94,7 @@ export namespace roll_type_other {
     // Complicated logic to check if two bonus rolls are the same, since the bonuses can be in any position.
     // We just check the reinforcement types. We compare levels when checking keep bonuses, but that is computed separately.
     export const compare_bonus_rolls = (br1:bonus_roll, br2:bonus_roll) => {
-        // Returns true if br1 reinforcements === br2 reinforcements (amend) and br1 levels === br2 levels (keep). Returns false otherwise
+        // Returns true if br1 reinforcements === br2 reinforcements. Returns false otherwise
         let matchedIndices:Set<number> = new Set<number>;
         for (let bt of br1.roll) {
             const i = br2.roll.findIndex((bonus:bonus_type, i:number) => {

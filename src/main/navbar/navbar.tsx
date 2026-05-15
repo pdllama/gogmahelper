@@ -20,6 +20,7 @@ export default function NavBar({menu} : MenuProp) {
                         classes={`w-[100%] max-h-[100px] h-[20%] mb-1 ${i%2 == 0 ? 'bg-black/50' : 'bg-black/75'} ${m == menu ? 'border border-red-500' : ''}`}
                         onClick={() => change_menu(m)}
                         disabled={m == menu}
+                        enable_disabled_style={false}
                         disableRipple={true} // The Ripple logic is a pain in the *ss right now to manage so I'm just disabling it.
                     >
                         <Text size={24} center classes='size-full'>{menu_labels[m]}</Text>

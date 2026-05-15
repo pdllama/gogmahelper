@@ -24,5 +24,5 @@ export const modify_skill_stat_element = (set:any) => {
     return (w:weapons, e:elements, add:boolean) => set((state:MainStore) => ({skill_stats: {...state.skill_stats, [w]: {...(state.skill_stats[w] === undefined ? {} : state.skill_stats[w]), [e]: add ? {num_rolls: 0, god_rolls: []} : undefined}}}))
 }
 export const modify_amend_stat_element = (set:any) => {
-    return (w:weapons, e:elements, add:boolean) => set((state:MainStore) => ({amend_bonus_stats: {...state.amend_bonus_stats, [w]: {...(state.skill_stats[w] === undefined ? {} : state.skill_stats[w]), [e]: add ? {num_rolls: 0, god_rolls: []} : undefined}}}))
+    return (w:weapons, e:elements, add:boolean) => set((state:MainStore) => ({amend_bonus_stats: {...state.amend_bonus_stats, [w]: {...(state.amend_bonus_stats[w] === undefined ? {} : state.amend_bonus_stats[w]), [e]: add ? {num_rolls: 0, god_rolls: []} : undefined}}}))
 }

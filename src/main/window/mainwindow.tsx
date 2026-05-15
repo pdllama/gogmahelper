@@ -4,8 +4,6 @@ import Dashboard from "./dashboard";
 import Skills from "./skills";
 import Bonuses from "./bonuses";
 
-
-
 export default function MainWindow({menu}:Partial<MenuProp>) {
 
 

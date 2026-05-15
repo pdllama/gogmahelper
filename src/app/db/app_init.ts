@@ -66,7 +66,8 @@ export namespace gogma_database {
         )
         )
         FROM (skill_rolls NATURAL JOIN weapon_profile) sr
-        WHERE sr.weapon = s.weapon 
+        WHERE sr.roll_num != 0
+        AND sr.weapon = s.weapon 
         AND sr.element = s.element
         AND EXISTS (
             SELECT 1 
@@ -93,7 +94,8 @@ export namespace gogma_database {
         )
         )
         FROM (amend_bonus_rolls NATURAL JOIN weapon_profile) abr
-        WHERE abr.weapon = ab.weapon 
+        WHERE abr.roll_num != 0
+        AND abr.weapon = ab.weapon 
         AND abr.element = ab.element
         AND EXISTS (
             SELECT 1 
@@ -118,7 +120,7 @@ export namespace gogma_database {
         )
         )
         FROM keep_bonus_rolls kbr
-        WHERE kbr.keep_id = kb.keep_id
+        WHERE kbr.keep_id = kb.keep_id AND kbr.roll_num != 0
         AND kbr.reinforcement_levels_canonical = kb.canonical_target_reinforcement_levels
     ) AS god_rolls
     FROM ((keep_bonus_profile NATURAL JOIN weapon_profile) LEFT JOIN keep_bonus_rolls) kb

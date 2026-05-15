@@ -92,7 +92,7 @@ export const dbInitString =
     CREATE TABLE IF NOT EXISTS keep_bonus_rolls (
         keep_id TEXT PRIMARY KEY REFERENCES keep_bonus_weapon(keep_id),
         roll_num INTEGER,
-        reinforcement_levels TEXT
+        reinforcement_levels TEXT,
         reinforcement_levels_canonical TEXT
     );
 

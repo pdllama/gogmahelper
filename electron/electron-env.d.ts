@@ -26,8 +26,15 @@ interface api {
   off(channel: string, listener: (...args: any[]) => void): void
   send(channel: string, ...args: any[]): void
   invoke(channel: string, ...args: any[]): Promise<any>
+
   initialize_app_state(): Promise<any>
   add_weapon_roller(weapon:weapons, element:elements, rollType:roll_type): Promise<any>
+  remove_weapon(weapon:weapons, rollType:roll_type): Promise<any>
+  remove_combo(weapon:weapons, element:elements, rollType:roll_type): Promise<any>
+
+  get_mh_wilds_window_id(): Promise<any>
+  open_video_settings(rollType:roll_type): Promise<any>
+  get_vs_init_state(): Promise<any>
 }
 
 // Used in Renderer process, expose in `preload.ts`

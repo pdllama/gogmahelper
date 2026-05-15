@@ -1,0 +1,29 @@
+{
+    "wilds_aspect_ratio": "16:9",
+    "video_settings": {
+        "skills_display_x": 1030,
+        "skills_display_y": 358,
+        "skills_display_width": 350,
+        "skills_display_height": 70,
+        "skills_display_scale": 1.55,
+        "skills_detection_x": 0,
+        "skills_detection_y": 0,
+        "skills_detection_width": 20,
+        "skills_detection_height": 70,
+        "skills_canvas_fps": 5,
+        "skills_pixel_threshold": 0.08,
+        "skills_read_delay": 0.5,
+        "bonuses_display_x": 1030,
+        "bonuses_display_y": 440,
+        "bonuses_display_width": 350,
+        "bonuses_display_height": 160,
+        "bonuses_display_scale": 1.55,
+        "bonuses_detection_x": 0,
+        "bonuses_detection_y": 0,
+        "bonuses_detection_width": 20,
+        "bonuses_detection_height": 160,
+        "bonuses_canvas_fps": 5,
+        "bonuses_pixel_threshold": 0.08,
+        "bonuses_read_delay": 1.2
+    }
+}

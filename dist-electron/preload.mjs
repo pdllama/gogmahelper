@@ -18,7 +18,13 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
     return electron.ipcRenderer.invoke(channel, ...omit);
   },
   initialize_app_state: () => electron.ipcRenderer.invoke("initialize_app_state"),
-  add_weapon_roller: (weapon, element, rollType) => electron.ipcRenderer.invoke("add_weapon_roller", weapon, element, rollType)
+  add_weapon_roller: (weapon, element, rollType) => electron.ipcRenderer.invoke("add_weapon_roller", weapon, element, rollType),
+  remove_weapon: (weapon, rollType) => electron.ipcRenderer.invoke("remove_weapon", weapon, rollType),
+  remove_combo: (weapon, element, rollType) => electron.ipcRenderer.invoke("remove_combo", weapon, element, rollType),
+  get_mh_wilds_window_id: () => electron.ipcRenderer.invoke("get_mh_wilds_window_id"),
+  open_video_settings: (rollType) => electron.ipcRenderer.send("open_video_settings", rollType),
+  // video settings handlers
+  get_vs_init_state: () => electron.ipcRenderer.invoke("get_vs_init_state")
   // You can expose other APTs you need here.
   // ...
 });
