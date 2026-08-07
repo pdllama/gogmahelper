@@ -1,10 +1,9 @@
 import { roll_type, skill_roll } from "@custom_types/rolltype";
-import React from "react";
 import { MainStore } from "@app/main_store";
 import { CaptureStore } from "@app/capture_store";
 
 export default async function saveSkillRollToDb (
-    roll:skill_roll, pid:string, roll_exists: boolean, rollType: roll_type,
+    roll:skill_roll, pid:number, roll_exists: boolean, rollType: roll_type,
     updateRollState: (roll:skill_roll, roll_exists: boolean) => any,
     incrementRollNumber: MainStore["increment_roll"],
     updateLastRoll: CaptureStore["set_last_skill_roll"]
