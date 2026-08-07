@@ -1,5 +1,7 @@
 /// <reference types="vite-plugin-electron/electron-env" />
 
+import { skill_roll } from "@custom_types/rolltype"
+
 declare namespace NodeJS {
   interface ProcessEnv {
     /**
@@ -35,6 +37,13 @@ interface api {
   get_mh_wilds_window_id(): Promise<any>
   open_video_settings(rollType:roll_type): Promise<any>
   get_vs_init_state(): Promise<any>
+
+  run_ocr(img_buffer:any): Promise<string>
+  get_rolls(weapon:weapons, element:elements, rollType:roll_type): Promise<Any>
+  get_keep_rolls(keep_id: string): Promise<Array<any>>
+
+  add_skill_roll(pid:number, roll:skill_roll, roll_exists:boolean): void
+
 }
 
 // Used in Renderer process, expose in `preload.ts`

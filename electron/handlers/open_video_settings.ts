@@ -4,21 +4,28 @@ import path from 'node:path'
 import {readFile, writeFile} from 'fs/promises'
 import { roll_type } from "@custom_types/rolltype"
 
+export async function create_child(
+
+) {
+    
+}
+
 export default async function open_video_settings_window(
     rollType:roll_type,
     child:BrowserWindow|null, win:BrowserWindow|null,
     VITE_DEV_SERVER_URL:string|undefined, RENDERER_DIST:string,
     dirname:string
 ) {
-    const configSettings:Config = await get_default_window_size()
-    ipcMain.handle('get_vs_init_state', () => {return {...configSettings, rollType}})
+    const configSettings:Config = await get_video_settings()
+    const state_settings = get_state_settings(configSettings, rollType)
+    ipcMain.handle('get_vs_init_state', () => {return {...state_settings, rollType}})
     child = new BrowserWindow({
         icon: path.join(process.env.VITE_PUBLIC as string, 'icons/appicon.png'),
         parent: win!,
         modal: true, // Prevents using parent until child is closed
         show: false, // Start hidden for smoother loading
         width: configSettings.wilds_aspect_ratio === '16:9' ? 1380 : 1780,
-        height: 820,
+        height: 920,
         webPreferences: {
             preload: path.join(dirname, "preload.mjs"),
             contextIsolation: true
@@ -39,11 +46,15 @@ export default async function open_video_settings_window(
     child.webContents.openDevTools()
 
     child.webContents.once('did-finish-load', () => {
-        child.webContents.send('initial-state', get_state_settings(configSettings, rollType))
+        child.webContents.send('initial-state', state_settings)
     })
 
     child.on('ready-to-show', () => {
         child!.show()
+    })
+
+    child.on('closed', () => {
+        ipcMain.removeHandler('get_vs_init_state')
     })
 
     // video settings handlers
@@ -55,7 +66,7 @@ export default async function open_video_settings_window(
 // The default window size of the video settings should be proportional to the aspect ratio of mh wilds - 16:9 or 21:9.
 // We default at 16:9 for the first time the user launches the video settings.
 // Every time
-async function get_default_window_size() {
+export async function get_video_settings() {
     try {
         const config_settings:Config = await readFile('config.json', 'utf-8').then((f:string) => JSON.parse(f));
         return config_settings

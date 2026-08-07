@@ -62,6 +62,13 @@ INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (4,
 INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (5, 1, 'Gore Magala''s Tyranny', 'Lord''s Soul');
 INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (6, 1, 'Gogmapocalypse', 'Lord''s Soul');
 
+INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (2, 10, 'Gogmapocalypse', 'Neopteron Alert');
+INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (3, 10, 'Rey Dau''s Voltage', 'Guardian''s Pulse');
+INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (4, 10, 'Ebony Odogaron''s Power', 'Flexible Leathercraft');
+INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (8, 10, 'Gore Magala''s Tyranny', 'Lord''s Favor');
+INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (40, 10, 'Xu Wu''s Vigor', 'Scaling Prowess');
+
+
 INSERT INTO weapon_profile(weapon, element) VALUES ('long_sword', 'thunder');
 INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (1, 3, 'Gore Magala''s Tyranny', 'Lord''s Soul');
 INSERT INTO skill_preferences(set_bonus, group_bonus) VALUES ('Gore Magala''s Tyranny', 'Lord''s Soul');

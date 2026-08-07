@@ -2,6 +2,7 @@ import { elements } from '@custom_types/element'
 import { roll_type } from '@custom_types/rolltype'
 import { weapons } from '@custom_types/weapons'
 import { ipcRenderer, contextBridge } from 'electron'
+import { skill_roll } from '@custom_types/rolltype'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -30,8 +31,14 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   open_video_settings: (rollType:roll_type) => ipcRenderer.send('open_video_settings', rollType),
 
   // video settings handlers
-  get_vs_init_state: () => ipcRenderer.invoke("get_vs_init_state")
+  get_vs_init_state: () => ipcRenderer.invoke("get_vs_init_state"),
 
+
+  run_ocr: (img_buffer:any) => ipcRenderer.invoke("run_ocr", img_buffer),
+  get_rolls: (weapon:weapons, element:elements, rollType:roll_type) => ipcRenderer.invoke("get_rolls", weapon, element, rollType),
+  get_keep_rolls: (keep_id:string) => ipcRenderer.invoke("get_keep_rolls", keep_id),
+
+  add_skill_roll: (pid:number, roll:skill_roll, roll_exists:boolean) => ipcRenderer.invoke('add_skill_roll', pid, roll, roll_exists)
   // You can expose other APTs you need here.
   // ...
 })

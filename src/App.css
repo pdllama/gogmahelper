@@ -94,6 +94,10 @@
   background-color: var(--sleep-color);
 }
 
+.bg-secondary {
+  background-color: var(--secondary);
+}
+
 
 
 .hover-bg-water:hover {

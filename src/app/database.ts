@@ -1,12 +1,17 @@
 import Database from 'better-sqlite3';
 import { dbInitString } from './db/db_init';
 import { gogma_database } from './db/app_init';
-import { group_bonus_skill, keep_bonus_stat, set_bonus_skill, weapon_bonus_stat, weapon_skill_stat, keep_bonus_profile, roll_type } from '@custom_types/rolltype';
+
+
+import { group_bonus_skill, keep_bonus_stat, set_bonus_skill, weapon_bonus_stat, weapon_skill_stat, keep_bonus_profile, roll_type, skill_roll } from '@custom_types/rolltype';
 import { roll_type_other } from '@custom_types/rolltype';
-import five_level_rolls = roll_type_other.five_level_rolls
-import five_reinforcement_rolls = roll_type_other.five_reinforcement_rolls
 import { weapons } from '@custom_types/weapons';
 import { elements } from '@custom_types/element';
+import { get_keep_rolls_query, get_rolls_query } from './db/db_getters';
+import { bonus_db_to_app, levels_db_to_app } from './util/bonuses_formats';
+import five_level_rolls = roll_type_other.five_level_rolls
+import five_reinforcement_rolls = roll_type_other.five_reinforcement_rolls
+import { addSkillRollQuery, updateSkillRollQuery } from './db/db_setters';
 
 // Types of what gets sent back as a result of the db_query
 type skill_stats_query = {
@@ -35,6 +40,7 @@ type keep_bonus_stats_query = {
     num_rolls: number,
     god_rolls: Array<{roll_num: number, roll:string}>
 }
+
 type skill_preference_query = {weapon:weapons|null, element:elements|null, set_bonus:set_bonus_skill, group_bonus:group_bonus_skill};
 type bonus_preference_query = {weapon:weapons|null, element:elements|null, reinforcements:string};
 
@@ -67,8 +73,6 @@ class AppDatabase {
             amend_bonus_stats[result.weapon]![result.element] = {
                 num_rolls: result.num_rolls, 
                 god_rolls: JSON.parse(result.god_rolls).map((gr:{roll_num: number, reinforcements: string, reinforcement_levels: string}) => {
-                    console.log(gr)
-                    console.log('GR ABOVE')
                     return {roll_num: gr.roll_num, roll: gogma_database.convert_db_reinforcements_to_app(gr.reinforcements, gr.reinforcement_levels)}
                 })
             } 
@@ -174,6 +178,44 @@ class AppDatabase {
             `)
     }
 
+    get_rolls(weapon:weapons, element:elements, rollType:roll_type) {
+        try {
+        const weapon_profile:any = this.db.prepare(`SELECT profile_id FROM weapon_profile WHERE weapon = ? AND element = ?`).get(weapon, element)
+        const wpid = weapon_profile.profile_id
+        const arr = this.db.prepare(get_rolls_query(rollType)).all(wpid);
+        if (rollType === roll_type.BONUSES) {
+            return arr.map((item:any) => {
+                const reinforcement_levels_formatted = levels_db_to_app(item.reinforcement_levels)
+                return {
+                    roll_num: item.roll_num,
+                    roll: bonus_db_to_app(item.reinforcements).map((r, i) => {return {reinforcement: r, reinforcement_level: reinforcement_levels_formatted[i]}}),
+                    reinforcements_canonical: item.reinforcements_canonical
+                }
+            })
+        }
+        return {rolls: arr, profile_id: wpid.toString()}
+        } catch(e) {
+            console.log(e)
+            return {rolls: []}
+        }
+    }
+
+    get_keep_rolls(keep_id: string) {
+        const keep_profile = this.db.prepare<[string], keep_bonus_stats_query>(`SELECT * FROM keep_bonus_profile NATURAL JOIN weapon_profile WHERE keep_id = ?`).get(keep_id)
+        const arr = this.db.prepare(get_keep_rolls_query()).all(keep_id);
+        return {
+            rolls: arr, 
+            curr_reinforcements: keep_profile!.curr_reinforcements, 
+            curr_levels: keep_profile!.curr_reinforcement_levels, 
+            target: keep_profile!.canonical_target_reinforcement_levels
+        }
+    }
+
+
+    add_skill_roll(pid:number, roll:skill_roll, roll_exists:boolean) {
+        const queryString = roll_exists ? updateSkillRollQuery(pid, roll) : addSkillRollQuery(pid, roll)
+        this.db.exec(queryString)
+    }
 }
 
 export default AppDatabase

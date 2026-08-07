@@ -5,11 +5,14 @@ import AppDatabase from '../src/app/database'
 import Database from 'better-sqlite3'
 import { weapons } from '@custom_types/weapons'
 import { elements } from '@custom_types/element'
-import { roll_type } from '@custom_types/rolltype'
+import { roll_type, skill_roll } from '@custom_types/rolltype'
 import get_mh_wilds_window_id from './handlers/get_mh_wilds_id'
 import open_video_settings_window from './handlers/open_video_settings'
+import run_ocr from './handlers/run_ocr'
+import init_app_state from './handlers/init_state'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // The built directory structure
 //
@@ -21,6 +24,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // │ │ └── preload.mjs
 // │
 process.env.APP_ROOT = path.join(__dirname, '..')
+
+
 
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
@@ -37,7 +42,8 @@ function createWindow() {
     icon: path.join(process.env.VITE_PUBLIC as string, 'icons/appicon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
-      contextIsolation: true
+      contextIsolation: true,
+      webSecurity: true
     },
   })
   
@@ -79,6 +85,7 @@ app.on('activate', () => {
   }
 })
 
+app.commandLine.appendSwitch('disable-features', 'WindowsGraphicsCapture');
 app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
 
 app.whenReady().then(() => {
@@ -93,12 +100,17 @@ app.whenReady().then(() => {
       }
   });
 
-  ipcMain.handle('initialize_app_state', () => {return {...db.initialize_stats(), ...db.initialize_preferences()}})
+  ipcMain.handle('initialize_app_state', () => init_app_state(db))
   ipcMain.handle('add_weapon_roller', (_:any, weapon:weapons, element:elements, rollType:roll_type) => db.add_weapon(weapon, element, rollType))
   ipcMain.handle('remove_weapon', (_:any, weapon:weapons, rollType:roll_type) => db.remove_weapon(weapon, rollType))
   ipcMain.handle('remove_combo', (_:any, weapon:weapons, element:elements, rollType:roll_type) => db.remove_combo(weapon, element, rollType))
 
   ipcMain.handle('get_mh_wilds_window_id', async() => get_mh_wilds_window_id())
+  ipcMain.handle('run_ocr', async(_:any, img_buffer:Buffer) => run_ocr(img_buffer))
+  ipcMain.handle('get_rolls', async(_:any, weapon:weapons, element:elements, rollType:roll_type) => db.get_rolls(weapon, element, rollType))
+  ipcMain.handle('get_keep_rolls', async(_:any, keep_id:string) => db.get_keep_rolls(keep_id))
+
+  ipcMain.handle('add_skill_roll', async(_:any, pid:number, roll:skill_roll, roll_exists:boolean) => db.add_skill_roll(pid, roll, roll_exists))
 
   ipcMain.on('open_video_settings', async(_, rollType:roll_type) => open_video_settings_window(rollType, child!, win, VITE_DEV_SERVER_URL, RENDERER_DIST, __dirname))
   // ipcMain.handle('open_video_settings', async() => open_video_settings_window(child!, win, VITE_DEV_SERVER_URL, RENDERER_DIST))

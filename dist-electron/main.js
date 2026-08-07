@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { readFile, writeFile } from "fs/promises";
+import { createWorker } from "tesseract.js";
 var weapons = /* @__PURE__ */ ((weapons2) => {
   weapons2["B"] = "bow";
   weapons2["CB"] = "charge_blade";
@@ -297,6 +298,34 @@ var gogma_database;
   }
   gogma_database2.convert_db_reinforcements_to_app = convert_db_reinforcements_to_app;
 })(gogma_database || (gogma_database = {}));
+const get_rolls_query = (rollType) => `
+    SELECT roll_num, ${rollType === "skills" ? "set_bonus, group_bonus" : "reinforcements, reinforcement_levels, reinforcements_canonical"} 
+    FROM ${rollType === "skills" ? "skill_rolls" : "amend_bonus_rolls"} NATURAL JOIN weapon_profile
+    WHERE profile_id = ? AND roll_num != 0
+    ORDER BY roll_num ASC
+`;
+const get_keep_rolls_query = () => `
+    SELECT roll_num, curr_reinforcements AS reinforcements, reinforcement_levels, reinforcement_levels_canonical
+    FROM keep_bonus_rolls NATURAL JOIN keep_bonus_profile
+    WHERE keep_id = ? AND roll_num != 0
+    ORDER BY roll_num ASC
+`;
+const bonus_db_to_app = (bonus_string) => {
+  return bonus_string.split(" ");
+};
+const levels_db_to_app = (levels_string) => {
+  return levels_string.split(" ");
+};
+function addSkillRollQuery(pid, roll) {
+  return `
+    INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (${roll.roll_num}, ${pid}, '${roll.set_bonus.replace("'", "''")}', '${roll.group_bonus.replace("'", "''")}')
+`;
+}
+function updateSkillRollQuery(pid, roll) {
+  return `
+    UPDATE skill_rolls SET set_bonus = '${roll.set_bonus.replace("'", "''")}', group_bonus = '${roll.group_bonus.replace("'", "''")}' WHERE pid = '${pid}' AND roll_num = ${roll.roll_num}
+`;
+}
 class AppDatabase {
   db;
   constructor(db) {
@@ -323,8 +352,6 @@ class AppDatabase {
       amend_bonus_stats[result.weapon][result.element] = {
         num_rolls: result.num_rolls,
         god_rolls: JSON.parse(result.god_rolls).map((gr) => {
-          console.log(gr);
-          console.log("GR ABOVE");
           return { roll_num: gr.roll_num, roll: gogma_database.convert_db_reinforcements_to_app(gr.reinforcements, gr.reinforcement_levels) };
         })
       };
@@ -395,6 +422,43 @@ class AppDatabase {
                 )
             `);
   }
+  get_rolls(weapon, element, rollType) {
+    try {
+      const weapon_profile = this.db.prepare(`SELECT profile_id FROM weapon_profile WHERE weapon = ? AND element = ?`).get(weapon, element);
+      const wpid = weapon_profile.profile_id;
+      const arr = this.db.prepare(get_rolls_query(rollType)).all(wpid);
+      if (rollType === roll_type.BONUSES) {
+        return arr.map((item) => {
+          const reinforcement_levels_formatted = levels_db_to_app(item.reinforcement_levels);
+          return {
+            roll_num: item.roll_num,
+            roll: bonus_db_to_app(item.reinforcements).map((r, i) => {
+              return { reinforcement: r, reinforcement_level: reinforcement_levels_formatted[i] };
+            }),
+            reinforcements_canonical: item.reinforcements_canonical
+          };
+        });
+      }
+      return { rolls: arr, profile_id: wpid.toString() };
+    } catch (e) {
+      console.log(e);
+      return { rolls: [] };
+    }
+  }
+  get_keep_rolls(keep_id) {
+    const keep_profile = this.db.prepare(`SELECT * FROM keep_bonus_profile NATURAL JOIN weapon_profile WHERE keep_id = ?`).get(keep_id);
+    const arr = this.db.prepare(get_keep_rolls_query()).all(keep_id);
+    return {
+      rolls: arr,
+      curr_reinforcements: keep_profile.curr_reinforcements,
+      curr_levels: keep_profile.curr_reinforcement_levels,
+      target: keep_profile.canonical_target_reinforcement_levels
+    };
+  }
+  add_skill_roll(pid, roll, roll_exists) {
+    const queryString = roll_exists ? updateSkillRollQuery(pid, roll) : addSkillRollQuery(pid, roll);
+    this.db.exec(queryString);
+  }
 }
 async function get_mh_wilds_window_id() {
   const window_sources = await desktopCapturer.getSources({ types: ["window"] });
@@ -429,9 +493,10 @@ const app_config_defaults = {
   }
 };
 async function open_video_settings_window(rollType, child2, win2, VITE_DEV_SERVER_URL2, RENDERER_DIST2, dirname) {
-  const configSettings = await get_default_window_size();
+  const configSettings = await get_video_settings();
+  const state_settings = get_state_settings(configSettings, rollType);
   ipcMain.handle("get_vs_init_state", () => {
-    return { ...configSettings, rollType };
+    return { ...state_settings, rollType };
   });
   child2 = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "icons/appicon.png"),
@@ -441,7 +506,7 @@ async function open_video_settings_window(rollType, child2, win2, VITE_DEV_SERVE
     show: false,
     // Start hidden for smoother loading
     width: configSettings.wilds_aspect_ratio === "16:9" ? 1380 : 1780,
-    height: 820,
+    height: 920,
     webPreferences: {
       preload: path.join(dirname, "preload.mjs"),
       contextIsolation: true
@@ -455,13 +520,16 @@ async function open_video_settings_window(rollType, child2, win2, VITE_DEV_SERVE
   }
   child2.webContents.openDevTools();
   child2.webContents.once("did-finish-load", () => {
-    child2.webContents.send("initial-state", get_state_settings(configSettings, rollType));
+    child2.webContents.send("initial-state", state_settings);
   });
   child2.on("ready-to-show", () => {
     child2.show();
   });
+  child2.on("closed", () => {
+    ipcMain.removeHandler("get_vs_init_state");
+  });
 }
-async function get_default_window_size() {
+async function get_video_settings() {
   try {
     const config_settings = await readFile("config.json", "utf-8").then((f) => JSON.parse(f));
     return config_settings;
@@ -490,6 +558,24 @@ function get_state_settings(config, rollType) {
   settings.read_delay = path2[`${rollType}_read_delay`];
   return settings;
 }
+let tesseract_worker = null;
+async function run_ocr(img_buffer) {
+  if (!tesseract_worker) {
+    tesseract_worker = await createWorker("eng");
+  }
+  try {
+    const { data: { text } } = await tesseract_worker.recognize(img_buffer);
+    return text.trim();
+  } catch (error) {
+    console.error("OCR Failed: ", error);
+    return "";
+  }
+}
+async function init_app_state(db) {
+  const allConfig = await get_video_settings();
+  const videoSettings = { wilds_aspect_ratio: allConfig.wilds_aspect_ratio, video_settings: allConfig.video_settings };
+  return { ...db.initialize_stats(), ...db.initialize_preferences(), vs: videoSettings };
+}
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -503,7 +589,8 @@ function createWindow() {
     icon: path.join(process.env.VITE_PUBLIC, "icons/appicon.png"),
     webPreferences: {
       preload: path.join(__dirname$1, "preload.mjs"),
-      contextIsolation: true
+      contextIsolation: true,
+      webSecurity: true
     }
   });
   win.setMenu(null);
@@ -530,6 +617,7 @@ app.on("activate", () => {
     createWindow();
   }
 });
+app.commandLine.appendSwitch("disable-features", "WindowsGraphicsCapture");
 app.commandLine.appendSwitch("enable-usermedia-screen-capturing");
 app.whenReady().then(() => {
   const dbPath = path.join(app.getPath("userData"), "gogmahelper.db");
@@ -541,13 +629,15 @@ app.whenReady().then(() => {
       callback(false);
     }
   });
-  ipcMain.handle("initialize_app_state", () => {
-    return { ...db.initialize_stats(), ...db.initialize_preferences() };
-  });
+  ipcMain.handle("initialize_app_state", () => init_app_state(db));
   ipcMain.handle("add_weapon_roller", (_, weapon, element, rollType) => db.add_weapon(weapon, element, rollType));
   ipcMain.handle("remove_weapon", (_, weapon, rollType) => db.remove_weapon(weapon, rollType));
   ipcMain.handle("remove_combo", (_, weapon, element, rollType) => db.remove_combo(weapon, element, rollType));
   ipcMain.handle("get_mh_wilds_window_id", async () => get_mh_wilds_window_id());
+  ipcMain.handle("run_ocr", async (_, img_buffer) => run_ocr(img_buffer));
+  ipcMain.handle("get_rolls", async (_, weapon, element, rollType) => db.get_rolls(weapon, element, rollType));
+  ipcMain.handle("get_keep_rolls", async (_, keep_id) => db.get_keep_rolls(keep_id));
+  ipcMain.handle("add_skill_roll", async (_, pid, roll, roll_exists) => db.add_skill_roll(pid, roll, roll_exists));
   ipcMain.on("open_video_settings", async (_, rollType) => open_video_settings_window(rollType, child, win, VITE_DEV_SERVER_URL, RENDERER_DIST, __dirname$1));
   createWindow();
 }).catch((err) => {

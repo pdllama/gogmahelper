@@ -8,7 +8,7 @@ import TimeoutButton from "@components/common/button/timeoutbutton"
 import { useState } from "react"
 import SlidingWindow from "@components/common/sliding_window/slidingwindow"
 import { remove_combo, remove_weapon as remove_weapon_rolls } from "@app/store_actions/rolls"
-import { MainStore } from "@app/main_store"
+import { MainStore, useMainStore } from "@app/main_store"
 import { AlertStore } from "@app/alerts/alert_store"
 
 
@@ -31,6 +31,8 @@ export default function ElementRow({weapon, e, num_rolls, god_rolls, is_end, rol
 
     const [delete_screen, set_delete_screen] = useState(false)
 
+    const select_weapon_element = useMainStore((state) => state.select_weapon_element)
+
     const text_color = `text-${e}`
     const hover_styles = `hover-bg-${e}`
 
@@ -39,6 +41,7 @@ export default function ElementRow({weapon, e, num_rolls, god_rolls, is_end, rol
             <Button
                 disableRipple
                 classes={`size-full flex items-center relative p-0 bg-transparent rounded-none hover_styles border-none hover:border-none ${hover_styles}`}
+                onClick={() => select_weapon_element(weapon, e)}
             >
                 <img src={`icons/elements/${e}.png`} width='40px' height='40px'/>
                 <div className='size-full flex flex-col justify-start items-start p-1'>

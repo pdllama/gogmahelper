@@ -3,17 +3,19 @@ import NavBar from './main/navbar/navbar'
 import MainWindow from './main/window/mainwindow'
 import { useMainStore } from './app/main_store'
 import { useEffect } from 'react'
-import { initialize_store } from './app/store_initializers'
+import { initialize_stores } from './app/store_initializers'
 import { AlertArea } from './app/alerts/alert'
+import { useCaptureStore } from './app/capture_store'
 
 
 
 function App() {
   const menu = useMainStore((state) => state.menu)
   const init_stats = useMainStore((state) => state.initialize_state)
+  const init_cap_settings = useCaptureStore((state) => state.initialize_capture_store);
 
   useEffect(() => {
-    initialize_store(init_stats);
+    initialize_stores(init_stats, init_cap_settings);
   }, [])
 
   return (

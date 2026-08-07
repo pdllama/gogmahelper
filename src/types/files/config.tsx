@@ -63,6 +63,8 @@ export interface VideoSettingsConfig {
     read_delay: number,
 }
 
+export enum VsScreens {display='display', detection='detection'}
+
 const generate_default = (
     rollType:roll_type,
     display_x: number, display_y: number, display_width:number, display_height:number, scale: number,

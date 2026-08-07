@@ -1,8 +1,9 @@
 import { element_labels, elements } from "@custom_types/element";
-import { roll_type } from "@custom_types/rolltype";
+import { roll_type, skill_roll, bonus_roll, keep_bonus_roll } from "@custom_types/rolltype";
 import { weapon_labels, weapons } from "@custom_types/weapons";
 import { MainStore } from "../main_store";
 import { AlertStore } from "../alerts/alert_store";
+import { rollsDataState } from "../../main/window/rollscreen";
 
 
 export async function add_new_weapon(
@@ -39,4 +40,17 @@ export async function remove_combo(
     await window.ipcRenderer.remove_combo(weapon, element, rollType);
     store_function(weapon, element, false);
     add_alert({title: '', content: `Removed ${element_labels[element]} rolls!`, type: 'success', timeout: 3})
+}
+
+// type get_rolls_output = {
+//     rolls: Array<skill_roll|bonus_roll|keep_bonus_roll>,
+//     profile_id: 
+// }
+
+export async function initialize_combo_rolls(
+    set_state: React.Dispatch<React.SetStateAction<rollsDataState>>,
+    w:weapons, e:elements, rt:roll_type
+) {
+    const arr:any = await window.ipcRenderer.get_rolls(w, e, rt);
+    set_state({rolls: arr.rolls, pid: arr.profile_id, loadedRolls: true});
 }

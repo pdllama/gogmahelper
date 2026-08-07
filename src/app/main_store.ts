@@ -1,6 +1,6 @@
 import { elements } from '@custom_types/element'
 import { bonus_rolls_array, skill_rolls_array } from '@custom_types/preferences'
-import { weapon_skill_stat, weapon_bonus_stat, keep_bonus_stat, keep_bonus_profile, roll_type } from '@custom_types/rolltype'
+import { weapon_skill_stat, weapon_bonus_stat, keep_bonus_stat, keep_bonus_profile, roll_type, bonus_roll_type } from '@custom_types/rolltype'
 import { weapons } from '@custom_types/weapons'
 import { create } from 'zustand'
 import { modify_amend_stat_element, modify_amend_stat_weapon, modify_keep_stat_weapon, modify_skill_stat_element, modify_skill_stat_weapon } from './store_actions/change_stats'
@@ -11,6 +11,7 @@ export interface MainStore {
     skill_roll_num: number,
     bonus_roll_num: number,
     menu: menu,
+    bonus_type: bonus_roll_type,
     selected_weapon: weapons|null,
     selected_element: elements|null,
 
@@ -37,6 +38,8 @@ export interface MainStore {
 
     initialize_state: (ss:weapon_skill_stat, bs: weapon_bonus_stat, kbs: keep_bonus_stat, kbp: Record<string, keep_bonus_profile>, sp: skill_rolls_array, bp: bonus_rolls_array) => void,
     change_menu: (new_menu:menu) => void,
+
+    select_weapon_element: (w:weapons|null, e:elements|null) => void
 }
 
 export const useMainStore = create<MainStore>((set) => ({
@@ -44,6 +47,7 @@ export const useMainStore = create<MainStore>((set) => ({
     skill_roll_num: 1,
     bonus_roll_num: 1,
     menu: menu.dashboard,
+    bonus_type: bonus_roll_type.AMEND,
     selected_weapon: null,
     selected_element: null,
 
@@ -70,5 +74,8 @@ export const useMainStore = create<MainStore>((set) => ({
 
     initialize_state: (ss:weapon_skill_stat, bs: weapon_bonus_stat, kbs: keep_bonus_stat, kbp: Record<string, keep_bonus_profile>, sp: skill_rolls_array, bp: bonus_rolls_array) => 
         set(() => ({skill_stats: ss, amend_bonus_stats: bs, keep_bonus_stats: kbs, keep_bonus_profiles: kbp, skill_preferences:sp, bonus_preferences: bp})),
-    change_menu: (new_menu:menu) => set(() => ({menu:new_menu})),
+    change_menu: (new_menu:menu) => set(() => ({menu:new_menu, selected_weapon: null, selected_element: null})),
+
+    select_weapon_element: (w:weapons|null, e:elements|null) => set(() => ({selected_weapon: w, selected_element: e}))
+
 }))

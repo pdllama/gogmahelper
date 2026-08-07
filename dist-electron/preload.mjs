@@ -24,7 +24,11 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   get_mh_wilds_window_id: () => electron.ipcRenderer.invoke("get_mh_wilds_window_id"),
   open_video_settings: (rollType) => electron.ipcRenderer.send("open_video_settings", rollType),
   // video settings handlers
-  get_vs_init_state: () => electron.ipcRenderer.invoke("get_vs_init_state")
+  get_vs_init_state: () => electron.ipcRenderer.invoke("get_vs_init_state"),
+  run_ocr: (img_buffer) => electron.ipcRenderer.invoke("run_ocr", img_buffer),
+  get_rolls: (weapon, element, rollType) => electron.ipcRenderer.invoke("get_rolls", weapon, element, rollType),
+  get_keep_rolls: (keep_id) => electron.ipcRenderer.invoke("get_keep_rolls", keep_id),
+  add_skill_roll: (pid, roll, roll_exists) => electron.ipcRenderer.invoke("add_skill_roll", pid, roll, roll_exists)
   // You can expose other APTs you need here.
   // ...
 });

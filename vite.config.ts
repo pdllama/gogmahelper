@@ -5,6 +5,18 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import tsconfigPaths from "vite-tsconfig-paths"
 
+const resolveOpts = {
+    alias: {
+      '@data': path.resolve(__dirname, 'data'),
+      '@components': path.resolve(__dirname, 'src/components'),
+      '@custom_types': path.resolve(__dirname, 'src/types'),
+      '@app': path.resolve(__dirname, 'src/app'),
+      '@file': path.resolve(__dirname, 'file'),
+      '@file_readers': path.resolve(__dirname, 'file/filereaders'),
+      '@file_writers': path.resolve(__dirname, 'file/filewriters'),
+    }
+  }
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -15,12 +27,13 @@ export default defineConfig({
         // Shortcut of `build.lib.entry`.
         entry: 'electron/main.ts',
         vite: {
-          plugins: [tsconfigPaths()],
+          plugins: [],
           build: {
             rollupOptions: {
-              external: ['better-sqlite3']
+              external: ['better-sqlite3', 'tesseract.js']
             }
-          }
+          },
+          resolve: resolveOpts
         }
       },
       preload: {
@@ -28,12 +41,13 @@ export default defineConfig({
         // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
         input: path.join(__dirname, 'electron/preload.ts'),
         vite: {
-          plugins: [tsconfigPaths()],
+          plugins: [],
           build: {
             rollupOptions: {
               external: ['better-sqlite3']
             }
-          }
+          },
+          resolve: resolveOpts
         }
       },
       // Ployfill the Electron and Node.js API for Renderer process.
@@ -44,8 +58,10 @@ export default defineConfig({
         ? undefined
         : {},
     }),
-    tsconfigPaths()
-  ]
+    // tsconfigPaths()
+    
+  ],
+  resolve: resolveOpts,
   // resolve: {
   //   extensions: [".ts", ".js", ".tsx", ".jsx"],
   //   alias: {

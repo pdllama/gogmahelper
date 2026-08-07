@@ -2,38 +2,76 @@
 // The pipeline for screen reading is as follows:
 //      1. Generate the loop 
 
-export type video_region = {
-    x: number, y: number, width:number, height:number, scale:number
+import { CaptureStore } from "@app/capture_store";
+import { MainStore } from "@app/main_store";
+import saveSkillRollToDb from "@app/store_actions/videodetection/registerroll";
+import { group_bonus_skill, set_bonus_skill, skill_roll, bonus_roll, keep_bonus_roll, roll_type } from "@custom_types/rolltype";
+
+const set_bonus_arr = Object.values(set_bonus_skill)
+const group_bonus_arr = Object.values(group_bonus_skill)
+
+type region = {
+    x: number, y: number, width:number, height:number, 
+}
+
+type misc_options = {
+    canvas_fps: number,
+    pixel_threshold: number, 
+    read_delay: number
+}
+
+type saveFunction = (roll:skill_roll|bonus_roll|keep_bonus_roll) => void;
+ 
+export type saveRollTools = {
+    profile_id: number,
+    roll_exists: boolean,
+    rollType: roll_type,
+    roll_num: number,
+    insertRollIntoState: (roll:skill_roll|bonus_roll|keep_bonus_roll, roll_exists:boolean) => void;
+    increment_roll_num: MainStore["increment_roll"];
+    update_last_roll: CaptureStore["set_last_skill_roll"]|CaptureStore["set_last_amend_roll"]|CaptureStore["set_last_keep_roll"]
+}
+
+export type video_region = region & {
+    scale:number
 }
 
 export default class VideoProcessor {
     private video: HTMLVideoElement;
     private canvas: HTMLCanvasElement;
-    private canvas2: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
-    private ctx2: CanvasRenderingContext2D;
     private animationFrame: number | null = null;
     private region:video_region; // The Region 
+    private detection_region:region;
 
-    private ocrActive:boolean = false
-    private pixelThreshold:number = 0.08 // if 8% of pixels match the target blue in the detection area then we run ocr.
+    private ocrActive:boolean = false // flag used to demarcate when the ocr is running the first time its detected and avoid repeat running on subsequent frames within the time frame
+    private pixelThreshold:number; // if 8% of pixels match the target blue in the detection area then we run ocr.
 
     private last_time = 0;
-    private FPS = 5;
-    private frameTime = 1000/this.FPS;
+    private FPS:number;
+    private frameTime:number;
 
-    private readDelay = 0.5;
+    private readDelay:number;
+
+    private saveRollTools:saveRollTools|undefined;
 
     constructor(
         video:HTMLVideoElement,
         canvas: HTMLCanvasElement,
-        canvas2: HTMLCanvasElement,
-        region:video_region
+        region:video_region, // equivalent to the display 
+        detection_region:region,
+        misc_options:misc_options,
+        saveRollTools:saveRollTools
     ) {
         this.video = video;
         this.canvas = canvas;
-        this.canvas2 = canvas2;
         this.region = {x: region.x, y: region.y, width: region.width/region.scale, height:region.height/region.scale, scale: region.scale}
+        this.detection_region = detection_region
+        this.pixelThreshold = misc_options.pixel_threshold
+        this.FPS = misc_options.canvas_fps
+        this.frameTime = 1000/this.FPS
+        this.readDelay = misc_options.read_delay
+        this.saveRollTools = saveRollTools
 
         const ctx = canvas.getContext("2d", {willReadFrequently:true})
 
@@ -42,14 +80,6 @@ export default class VideoProcessor {
         }
         ctx.imageSmoothingEnabled = false;
         this.ctx = ctx
-
-        const ctx2 = canvas2.getContext("2d", {willReadFrequently:true})
-
-        if (!ctx2) {
-            throw new Error("Could not get canvas context");
-        }
-        ctx2.imageSmoothingEnabled = false;
-        this.ctx2 = ctx2
 
     }
 
@@ -102,7 +132,10 @@ export default class VideoProcessor {
     }
 
     private detectRollOccurred = () => {
-        const imageData = this.ctx.getImageData(0, 0, 20, this.region.height);
+        const imageData = this.ctx.getImageData(
+            this.detection_region.x, this.detection_region.y, 
+            this.detection_region.width, this.detection_region.height
+        );
         
         const data = imageData.data;
 
@@ -125,30 +158,52 @@ export default class VideoProcessor {
         if (percent_blue >= this.pixelThreshold) {
             this.ocrActive = true;
             setTimeout(() => {
-                // const img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height)
-                this.ctx2.drawImage(
-                    this.video, 
-                    this.region.x, this.region.y,
-                    this.region.width, this.region.height, 
-                    0, 0, 
-                    this.canvas2.width, this.canvas2.height
-                )
-                this.ocrActive = false;
+                
+                /* Perform OCR */
+                this.perform_ocr()
+
+            
             }, this.readDelay*1000)
         }
 
     }
 
-    private get_video_scale_x_and_y() {
-        const videoRect = this.video.getBoundingClientRect();
+    public updateRollTools = (
+        profile_id: number,
+        roll_exists: boolean,
+        rollType: roll_type,
+        roll_num: number
+    ) => {
+        if (this.saveRollTools) {
+            this.saveRollTools.profile_id = profile_id
+            this.saveRollTools.roll_exists = roll_exists
+            this.saveRollTools.rollType = rollType
+            this.saveRollTools.roll_num = roll_num
+        }
+    }
 
-        const displayedWidth = videoRect.width;
-        const displayedHeight = videoRect.height;
+    private perform_ocr = async() => {
+        const blob = await new Promise<Blob|null>(resolve => this.canvas.toBlob(resolve, 'image/png'));
+  
+        // 2. Convert Blob to an ArrayBuffer
+        const arrayBuffer : ArrayBuffer = await blob!.arrayBuffer();
+        
+        // 3. Wrap it in a Uint8Array (Electron automatically converts this to a Node Buffer on the other side)
+        const imageBuffer = new Uint8Array(arrayBuffer);
+        const text = await window.ipcRenderer.run_ocr(imageBuffer)
 
-        const scaleX = this.video.videoWidth / displayedWidth;
-        const scaleY = this.video.videoHeight / displayedHeight;
 
+        // The text comes out sometimes with random nonsense characters, so we have to filter it out.
+        const set_bonus = set_bonus_arr.filter((sbs:any) => text.includes(sbs))[0]
+        const group_bonus = group_bonus_arr.filter((gs:any) => text.includes(gs))[0]
+        
+        if (this.saveRollTools) {
+            const {profile_id, roll_num, roll_exists, rollType, insertRollIntoState, increment_roll_num, update_last_roll} = this.saveRollTools
+            const roll = {roll_num: roll_num, set_bonus, group_bonus}
+            
+            saveSkillRollToDb(roll, profile_id, roll_exists, rollType, insertRollIntoState, increment_roll_num, update_last_roll);
+        }
 
-        return {scaleX, scaleY}
+        this.ocrActive = false;
     }
 }

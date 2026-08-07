@@ -8,6 +8,8 @@
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
+  --secondary: #693e06;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -22,6 +24,7 @@
   --poison-color: #5B2C6C;
   --paralysis-color: #D2C078;
   --sleep-color: #5A78B1;
+
 }
 
 #root {
