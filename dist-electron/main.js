@@ -84,8 +84,8 @@ var roll_type_other;
   roll_type_other2.compare_bonus_rolls = (br1, br2) => {
     let matchedIndices = /* @__PURE__ */ new Set();
     for (let bt of br1.roll) {
-      const i = br2.roll.findIndex((bonus, i2) => {
-        return !matchedIndices.has(i2) && bonus.bonus == bt.bonus;
+      const i = br2.reinforcements.findIndex((bonus, i2) => {
+        return !matchedIndices.has(i2) && bonus == bt.bonus;
       });
       if (i == -1) {
         return false;
@@ -94,6 +94,44 @@ var roll_type_other;
       }
     }
     return true;
+  };
+  roll_type_other2.compare_level_rolls = (kbr1, kbr2) => {
+    let matchedIndices = /* @__PURE__ */ new Set();
+    for (let rl of kbr1) {
+      const i = kbr2.findIndex((bonus, i2) => {
+        return !matchedIndices.has(i2) && bonus == rl;
+      });
+      if (i == -1) {
+        return false;
+      } else {
+        matchedIndices.add(i);
+      }
+    }
+    return true;
+  };
+  roll_type_other2.is_desired_skill_roll = (w, e, sr, preferences) => {
+    let hit_pref = false;
+    preferences.forEach((psr) => {
+      if ((!psr.weapon || psr.weapon === w) && (!psr.element || psr.element === e) && sr.set_bonus === psr.set_bonus && sr.group_bonus === psr.group_bonus) {
+        hit_pref = true;
+        return;
+      }
+    });
+    return hit_pref;
+  };
+  roll_type_other2.is_desired_amend_roll = (w, e, br, preferences) => {
+    preferences.forEach((pbr) => {
+      if ((!pbr.weapon || pbr.weapon === w) && (!pbr.element || pbr.element === e) && (0, roll_type_other2.compare_bonus_rolls)(br, pbr)) {
+        return true;
+      }
+    });
+    return false;
+  };
+  roll_type_other2.is_desired_keep_roll = (kbr, preference) => {
+    if ((0, roll_type_other2.compare_level_rolls)(kbr.roll, preference)) {
+      return true;
+    }
+    return false;
   };
 })(roll_type_other || (roll_type_other = {}));
 let string_set_bonus_enum = "";
@@ -323,7 +361,12 @@ function addSkillRollQuery(pid, roll) {
 }
 function updateSkillRollQuery(pid, roll) {
   return `
-    UPDATE skill_rolls SET set_bonus = '${roll.set_bonus.replace("'", "''")}', group_bonus = '${roll.group_bonus.replace("'", "''")}' WHERE pid = '${pid}' AND roll_num = ${roll.roll_num}
+    UPDATE skill_rolls SET set_bonus = '${roll.set_bonus.replace("'", "''")}', group_bonus = '${roll.group_bonus.replace("'", "''")}' WHERE profile_id = '${pid}' AND roll_num = ${roll.roll_num}
+`;
+}
+function deleteSkillRollQuery(pid, rollnum) {
+  return `
+    DELETE FROM skill_rolls WHERE profile_id = ${pid} AND roll_num = ${rollnum}
 `;
 }
 class AppDatabase {
@@ -458,6 +501,9 @@ class AppDatabase {
   add_skill_roll(pid, roll, roll_exists) {
     const queryString = roll_exists ? updateSkillRollQuery(pid, roll) : addSkillRollQuery(pid, roll);
     this.db.exec(queryString);
+  }
+  remove_skill_roll(pid, roll_num) {
+    this.db.exec(deleteSkillRollQuery(pid, roll_num));
   }
 }
 async function get_mh_wilds_window_id() {
@@ -638,6 +684,7 @@ app.whenReady().then(() => {
   ipcMain.handle("get_rolls", async (_, weapon, element, rollType) => db.get_rolls(weapon, element, rollType));
   ipcMain.handle("get_keep_rolls", async (_, keep_id) => db.get_keep_rolls(keep_id));
   ipcMain.handle("add_skill_roll", async (_, pid, roll, roll_exists) => db.add_skill_roll(pid, roll, roll_exists));
+  ipcMain.handle("delete_skill_roll", async (_, pid, rollnum) => db.remove_skill_roll(pid, rollnum));
   ipcMain.on("open_video_settings", async (_, rollType) => open_video_settings_window(rollType, child, win, VITE_DEV_SERVER_URL, RENDERER_DIST, __dirname$1));
   createWindow();
 }).catch((err) => {

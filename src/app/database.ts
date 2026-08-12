@@ -11,7 +11,7 @@ import { get_keep_rolls_query, get_rolls_query } from './db/db_getters';
 import { bonus_db_to_app, levels_db_to_app } from './util/bonuses_formats';
 import five_level_rolls = roll_type_other.five_level_rolls
 import five_reinforcement_rolls = roll_type_other.five_reinforcement_rolls
-import { addSkillRollQuery, updateSkillRollQuery } from './db/db_setters';
+import { addSkillRollQuery, deleteSkillRollQuery, updateSkillRollQuery } from './db/db_setters';
 
 // Types of what gets sent back as a result of the db_query
 type skill_stats_query = {
@@ -215,6 +215,9 @@ class AppDatabase {
     add_skill_roll(pid:number, roll:skill_roll, roll_exists:boolean) {
         const queryString = roll_exists ? updateSkillRollQuery(pid, roll) : addSkillRollQuery(pid, roll)
         this.db.exec(queryString)
+    }
+    remove_skill_roll(pid:number, roll_num:number) {
+        this.db.exec(deleteSkillRollQuery(pid, roll_num));
     }
 }
 

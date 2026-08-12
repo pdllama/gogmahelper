@@ -52,5 +52,5 @@ export async function initialize_combo_rolls(
     w:weapons, e:elements, rt:roll_type
 ) {
     const arr:any = await window.ipcRenderer.get_rolls(w, e, rt);
-    set_state({rolls: arr.rolls, pid: arr.profile_id, loadedRolls: true});
+    set_state(state => {return {...state, rolls: arr.rolls, pid: arr.profile_id, loadedRolls: true}});
 }

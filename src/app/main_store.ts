@@ -1,9 +1,9 @@
 import { elements } from '@custom_types/element'
 import { bonus_rolls_array, skill_rolls_array } from '@custom_types/preferences'
-import { weapon_skill_stat, weapon_bonus_stat, keep_bonus_stat, keep_bonus_profile, roll_type, bonus_roll_type } from '@custom_types/rolltype'
+import { weapon_skill_stat, weapon_bonus_stat, keep_bonus_stat, keep_bonus_profile, roll_type, bonus_roll_type, skill_roll, bonus_roll, keep_bonus_roll } from '@custom_types/rolltype'
 import { weapons } from '@custom_types/weapons'
 import { create } from 'zustand'
-import { modify_amend_stat_element, modify_amend_stat_weapon, modify_keep_stat_weapon, modify_skill_stat_element, modify_skill_stat_weapon } from './store_actions/change_stats'
+import { add_keep_roll_to_stats, add_roll_to_stats, modify_amend_stat_element, modify_amend_stat_weapon, modify_keep_stat_weapon, modify_skill_stat_element, modify_skill_stat_weapon, remove_roll_from_stats } from './store_actions/change_stats'
 import { menu } from '@custom_types/menutype'
 
 
@@ -33,6 +33,9 @@ export interface MainStore {
     modify_amend_stat_element: (w:weapons, e:elements, add:boolean) => void, 
 
     increment_roll: (rt:roll_type) => void,
+    add_roll_to_stats: (roll:skill_roll|bonus_roll, rollType: roll_type, w:weapons, e:elements, rollExists:boolean) => void,
+    add_keep_roll_to_stats: (roll:keep_bonus_roll, id:string, rollExists:boolean) => void,
+    remove_roll_from_stats: (roll_num:number, rollType:roll_type, bonusRollType:bonus_roll_type, kid:string|undefined) => void,
     set_roll_number: (rt:roll_type, n:number) => void,
     reset_roll_num: (rt:roll_type) => void,
 
@@ -57,6 +60,7 @@ export const useMainStore = create<MainStore>((set) => ({
     keep_bonus_profiles: {},
 
     skill_preferences: [],
+    
     bonus_preferences: [],
 
     modify_skill_stat_weapon: modify_skill_stat_weapon(set),
@@ -69,6 +73,9 @@ export const useMainStore = create<MainStore>((set) => ({
     // remove_weapon: (w:weapons|string) => set((state) => (state.weapons_with_data ? {weapons_with_data: state.weapons_with_data.filter((w2:weapons) => w2 != w)} : {weapons_with_data: state.weapons_with_data})),
 
     increment_roll: (rt:roll_type) => set((state) => (rt == roll_type.SKILLS ? {skill_roll_num: state.skill_roll_num+1} : {bonus_roll_num: state.bonus_roll_num+1})),
+    add_roll_to_stats: add_roll_to_stats(set),
+    add_keep_roll_to_stats: add_keep_roll_to_stats(set),
+    remove_roll_from_stats: remove_roll_from_stats(set),
     set_roll_number: (rt:roll_type, n:number) => set(() => (rt == roll_type.SKILLS ? {skill_roll_num: n} : {bonus_roll_num: n})),
     reset_roll_num: (rt:roll_type) => set(() => (rt == roll_type.SKILLS ? {skill_roll_num: 1} : {bonus_roll_num: 1})),
 

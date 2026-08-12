@@ -111,6 +111,7 @@ app.whenReady().then(() => {
   ipcMain.handle('get_keep_rolls', async(_:any, keep_id:string) => db.get_keep_rolls(keep_id))
 
   ipcMain.handle('add_skill_roll', async(_:any, pid:number, roll:skill_roll, roll_exists:boolean) => db.add_skill_roll(pid, roll, roll_exists))
+  ipcMain.handle('delete_skill_roll', async(_:any, pid:number, rollnum:number) => db.remove_skill_roll(pid, rollnum))
 
   ipcMain.on('open_video_settings', async(_, rollType:roll_type) => open_video_settings_window(rollType, child!, win, VITE_DEV_SERVER_URL, RENDERER_DIST, __dirname))
   // ipcMain.handle('open_video_settings', async() => open_video_settings_window(child!, win, VITE_DEV_SERVER_URL, RENDERER_DIST))

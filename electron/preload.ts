@@ -38,7 +38,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   get_rolls: (weapon:weapons, element:elements, rollType:roll_type) => ipcRenderer.invoke("get_rolls", weapon, element, rollType),
   get_keep_rolls: (keep_id:string) => ipcRenderer.invoke("get_keep_rolls", keep_id),
 
-  add_skill_roll: (pid:number, roll:skill_roll, roll_exists:boolean) => ipcRenderer.invoke('add_skill_roll', pid, roll, roll_exists)
+  add_skill_roll: (pid:number, roll:skill_roll, roll_exists:boolean) => ipcRenderer.invoke('add_skill_roll', pid, roll, roll_exists),
+  delete_skill_roll: (pid:number, rollnum:number) => ipcRenderer.invoke('delete_skill_roll', pid, rollnum)
   // You can expose other APTs you need here.
   // ...
 })

@@ -6,6 +6,8 @@ import { CaptureStore } from "@app/capture_store";
 import { MainStore } from "@app/main_store";
 import saveSkillRollToDb from "@app/store_actions/videodetection/registerroll";
 import { group_bonus_skill, set_bonus_skill, skill_roll, bonus_roll, keep_bonus_roll, roll_type } from "@custom_types/rolltype";
+import { weapons } from "@custom_types/weapons";
+import { elements } from "@custom_types/element";
 
 const set_bonus_arr = Object.values(set_bonus_skill)
 const group_bonus_arr = Object.values(group_bonus_skill)
@@ -19,16 +21,16 @@ type misc_options = {
     pixel_threshold: number, 
     read_delay: number
 }
-
-type saveFunction = (roll:skill_roll|bonus_roll|keep_bonus_roll) => void;
  
 export type saveRollTools = {
-    profile_id: number,
+    profile_id: number|undefined,
     roll_exists: boolean,
     rollType: roll_type,
     roll_num: number,
+    w:weapons|null,
+    e:elements|null,
     insertRollIntoState: (roll:skill_roll|bonus_roll|keep_bonus_roll, roll_exists:boolean) => void;
-    increment_roll_num: MainStore["increment_roll"];
+    add_roll_to_state: MainStore["add_roll_to_stats"]|MainStore["add_keep_roll_to_stats"];
     update_last_roll: CaptureStore["set_last_skill_roll"]|CaptureStore["set_last_amend_roll"]|CaptureStore["set_last_keep_roll"]
 }
 
@@ -169,7 +171,7 @@ export default class VideoProcessor {
     }
 
     public updateRollTools = (
-        profile_id: number,
+        profile_id: number|undefined,
         roll_exists: boolean,
         rollType: roll_type,
         roll_num: number
@@ -198,10 +200,16 @@ export default class VideoProcessor {
         const group_bonus = group_bonus_arr.filter((gs:any) => text.includes(gs))[0]
         
         if (this.saveRollTools) {
-            const {profile_id, roll_num, roll_exists, rollType, insertRollIntoState, increment_roll_num, update_last_roll} = this.saveRollTools
+            const {profile_id, roll_num, roll_exists, rollType, w, e, insertRollIntoState, add_roll_to_state, update_last_roll} = this.saveRollTools
             const roll = {roll_num: roll_num, set_bonus, group_bonus}
             
-            saveSkillRollToDb(roll, profile_id, roll_exists, rollType, insertRollIntoState, increment_roll_num, update_last_roll);
+            saveSkillRollToDb(
+                roll, (profile_id as number), roll_exists, rollType, 
+                (w as weapons), (e as elements), 
+                insertRollIntoState, 
+                add_roll_to_state as MainStore["add_roll_to_stats"], 
+                update_last_roll as (sr:skill_roll) => void
+            );
         }
 
         this.ocrActive = false;

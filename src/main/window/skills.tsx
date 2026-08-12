@@ -6,6 +6,7 @@ import { roll_type } from "@custom_types/rolltype"
 import { weapons } from "@custom_types/weapons"
 import { useMainStore } from "../../app/main_store"
 import { useShallow } from "zustand/shallow"
+import ChangeableRollNumberDisplay from "@components/display/rollscreen/generalcomponents/rollnumberdisplay"
 
 
 
@@ -16,7 +17,8 @@ export default function Skills({}) {
 
     return <>
         <Text size='3xl' bold>Roll Skills</Text>
-        <div className='w-full flex flex-col'>
+        <div className='w-full flex flex-col gap-1'>
+            <ChangeableRollNumberDisplay />
             <Text size="xl" bold classes='text-start ml-3'>Rolls</Text>
             <GridWrapper>
                 {weapons_with_skill_rolls.map((w:weapons) => <RollDisplay key={`${w}-skill-display`} weapon={w} rollType={roll_type.SKILLS}/>)}

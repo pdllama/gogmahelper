@@ -15,8 +15,6 @@ import { AlertStore } from "@app/alerts/alert_store"
 type ElementRowProps = {
     weapon: weapons,
     e: elements,
-    num_rolls: number,
-    god_rolls: Array<skill_roll|bonus_roll>,
     is_end:boolean,
     rollType:roll_type,
     modify_stat_element:MainStore["modify_skill_stat_element"]|MainStore["modify_amend_stat_element"],
@@ -26,12 +24,15 @@ type ElementRowProps = {
     wrapper_classes:string
 }
 
-export default function ElementRow({weapon, e, num_rolls, god_rolls, is_end, rollType, modify_stat_element, remove_weapon, add_alert, is_last_ele, wrapper_classes=''}:ElementRowProps) {
-    // Note: we get unique god_rolls which removes duplicate rolls.
-
+export default function ElementRow({weapon, e, is_end, rollType, modify_stat_element, remove_weapon, add_alert, is_last_ele, wrapper_classes=''}:ElementRowProps) {
     const [delete_screen, set_delete_screen] = useState(false)
 
     const select_weapon_element = useMainStore((state) => state.select_weapon_element)
+    const num_rolls = useMainStore(state => state[rollType === roll_type.SKILLS ? "skill_stats" : "amend_bonus_stats"][weapon]![e]!.num_rolls)
+    const god_rolls = useMainStore(state => state[rollType === roll_type.SKILLS ? "skill_stats" : "amend_bonus_stats"][weapon]![e]!.god_rolls)
+    if (e === elements.dragon) {
+        console.log(god_rolls)
+    }
 
     const text_color = `text-${e}`
     const hover_styles = `hover-bg-${e}`
@@ -46,7 +47,7 @@ export default function ElementRow({weapon, e, num_rolls, god_rolls, is_end, rol
                 <img src={`icons/elements/${e}.png`} width='40px' height='40px'/>
                 <div className='size-full flex flex-col justify-start items-start p-1'>
                     <Text classes={`${text_color}`} size='lg' bold>{element_labels[e]}</Text>
-                    <Text size={11} classes={`${god_rolls.length === 0 ? 'italic' : ''}`}>{god_rolls.length === 0 ? 'No' : god_rolls.length} desired rolls found</Text> 
+                    <Text size={11} classes={`${god_rolls.length === 0 ? 'italic' : ''}`}>{god_rolls.length === 0 ? 'No' : god_rolls.length} desired roll{god_rolls.length === 1 ? "" : "s"} found</Text> 
                 </div>
                 <Text classes='p-1 min-w-[75px] mt-6' size='sm' bold>{num_rolls} rolls</Text>
                 

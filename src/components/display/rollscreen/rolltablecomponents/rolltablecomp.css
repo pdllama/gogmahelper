@@ -1,0 +1,12 @@
+
+.selected-row {
+    border: 2px solid rgb(12, 181, 248);
+}
+
+.select-inner {
+    background-color: rgb(15, 15, 15);
+}
+
+.del-but-pos {
+    top: calc(100% + 3px);
+}

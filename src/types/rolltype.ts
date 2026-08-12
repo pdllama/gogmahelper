@@ -1,5 +1,6 @@
 import { weapons } from "./weapons"
 import { elements } from "./element"
+import { bonus_rolls_array, skill_rolls_array } from "./preferences"
 
 export enum roll_type {
     SKILLS="skills",
@@ -93,17 +94,71 @@ export namespace roll_type_other {
 
     // Complicated logic to check if two bonus rolls are the same, since the bonuses can be in any position.
     // We just check the reinforcement types. We compare levels when checking keep bonuses, but that is computed separately.
-    export const compare_bonus_rolls = (br1:bonus_roll, br2:bonus_roll) => {
+    // archived version because the new one compares bonus roll to bonus roll preference type
+    // export const compare_bonus_rolls = (br1:bonus_roll, br2:bonus_roll) => {
+    //     // Returns true if br1 reinforcements === br2 reinforcements. Returns false otherwise
+    //     let matchedIndices:Set<number> = new Set<number>;
+    //     for (let bt of br1.roll) {
+    //         const i = br2.roll.findIndex((bonus:bonus_type, i:number) => {
+    //             return !matchedIndices.has(i) && bonus.bonus == bt.bonus
+    //         })
+    //         if (i == -1) {return false}
+    //         else {matchedIndices.add(i)}
+    //     }
+    //     return true
+    // }
+
+    export const compare_bonus_rolls = (br1:bonus_roll, br2:{weapon:weapons|null, element: elements|null, reinforcements:roll_type_other.five_reinforcement_rolls}) => {
         // Returns true if br1 reinforcements === br2 reinforcements. Returns false otherwise
         let matchedIndices:Set<number> = new Set<number>;
         for (let bt of br1.roll) {
-            const i = br2.roll.findIndex((bonus:bonus_type, i:number) => {
-                return !matchedIndices.has(i) && bonus.bonus == bt.bonus
+            const i = br2.reinforcements.findIndex((bonus:reinforcement, i:number) => {
+                return !matchedIndices.has(i) && bonus == bt.bonus
             })
             if (i == -1) {return false}
             else {matchedIndices.add(i)}
         }
         return true
+    }
+
+    export const compare_level_rolls = (kbr1:roll_type_other.five_level_rolls, kbr2:roll_type_other.five_level_rolls) => {
+        // Returns true if br1 reinforcements === br2 reinforcements. Returns false otherwise
+        let matchedIndices:Set<number> = new Set<number>;
+        for (let rl of kbr1) {
+            const i = kbr2.findIndex((bonus:reinforcement_level, i:number) => {
+                return !matchedIndices.has(i) && bonus == rl
+            })
+            if (i == -1) {return false}
+            else {matchedIndices.add(i)}
+        }
+        return true
+    }
+
+    export const is_desired_skill_roll = (w:weapons, e:elements, sr:skill_roll, preferences:skill_rolls_array) => {
+        let hit_pref = false
+        preferences.forEach(psr => {
+            if ((!psr.weapon || psr.weapon === w) && (!psr.element || psr.element === e) && (sr.set_bonus === psr.set_bonus) && (sr.group_bonus === psr.group_bonus)) {
+                hit_pref = true
+                return;
+            }
+        })
+        return hit_pref
+    }
+
+    export const is_desired_amend_roll = (w:weapons, e:elements, br:bonus_roll, preferences:bonus_rolls_array) => {
+        preferences.forEach(pbr => {
+            if ((!pbr.weapon || pbr.weapon === w) && (!pbr.element || pbr.element === e) && (compare_bonus_rolls(br, pbr))) {
+                return true
+            } 
+        })
+        return false
+    }
+
+    export const is_desired_keep_roll = (kbr:keep_bonus_roll, preference:roll_type_other.five_level_rolls) => {
+        if (compare_level_rolls(kbr.roll, preference)) {
+            return true
+        }
+        return false
     }
 
     // Gives a small overview of how many rolls, any good rolls, etc

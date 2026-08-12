@@ -5,15 +5,22 @@ type RollTableBonusRowProps = {
     rollNum: number,
     highlighted: boolean,
     bonusType: bonus_roll_type,
-    reinforcements: roll_type_other.five_reinforcement_rolls|Array<reinforcement>,
-    reinforcement_levels: roll_type_other.five_level_rolls|Array<reinforcement_level>
+    reinforcements: roll_type_other.five_reinforcement_rolls|Array<reinforcement|"">,
+    reinforcement_levels: roll_type_other.five_level_rolls|Array<reinforcement_level|"">
+    selectRoll: (rollnum:number, roll:any) => void;
+    selected: boolean
 }
 
-export default function RollTableBonusRow({rollNum, highlighted, reinforcements, reinforcement_levels}:RollTableBonusRowProps) {
+export default function RollTableBonusRow({rollNum, highlighted, reinforcements, reinforcement_levels, selectRoll, selected}:RollTableBonusRowProps) {
 
 
     return (
-        <tr className="border-b border-white">
+        <tr 
+            className={`border-b border-white ${highlighted ? 'bg-secondary' : ''}${selected ? ' border border-cyan-400' : ''}`}
+            onDoubleClick={() => {
+                selectRoll(rollNum, {roll_num: rollNum, roll: reinforcements.map((r, i) => {return {bonus: r, level: reinforcement_levels[i]}})});
+            }}
+        >
             <td className="border-r border-white p-2">
                 <Text>{rollNum}</Text>
             </td>

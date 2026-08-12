@@ -139,25 +139,21 @@ export default function RollDisplay({weapon, rollType}:RollDisplayProps) {
                     <Text classes='italic opacity-75'>No elements associated with this weapon</Text> :  // You shouldn't be able to have this happen, but it covers bases.
                     <>
                     {element_keys.map((e:elements, i:number) => {
-
-                        const god_rolls = weapon_elements![e]!.god_rolls 
-                        //Below filters out duplicate god rolls (same set and group bonus)
-                        const unique_god_rolls = god_rolls.filter((gr:skill_roll|bonus_roll, i:number) => {
-                            if (rollType === roll_type.SKILLS) {
-                                return god_rolls.findIndex((gr2:any) => (gr2.set_bonus === (gr as skill_roll).set_bonus && gr2.group_bonus === (gr as skill_roll).group_bonus)) === i
-                            } else {
-                                return god_rolls.findIndex((gr2:any) => roll_type_other.compare_bonus_rolls(gr2 as bonus_roll, gr as bonus_roll)) === i
-                            }
+                        // //Below filters out duplicate god rolls (same set and group bonus)
+                        // const unique_god_rolls = god_rolls.filter((gr:skill_roll|bonus_roll, i:number) => {
+                        //     if (rollType === roll_type.SKILLS) {
+                        //         return god_rolls.findIndex((gr2:any) => (gr2.set_bonus === (gr as skill_roll).set_bonus && gr2.group_bonus === (gr as skill_roll).group_bonus)) === i
+                        //     } else {
+                        //         return god_rolls.findIndex((gr2:any) => roll_type_other.compare_bonus_rolls(gr2 as bonus_roll, gr as bonus_roll)) === i
+                        //     }
                             
-                        })
+                        // })
 
                         return (
                             <ElementRow 
                                 key={`${weapon}-${e}-${rollType === roll_type.SKILLS ? 'skill' : 'amend-bonus'}-rolls`}
                                 weapon={weapon}
                                 e={e} 
-                                num_rolls={weapon_elements![e]!.num_rolls} 
-                                god_rolls={unique_god_rolls} 
                                 is_end={i === element_keys.length-1}
                                 modify_stat_element={modify_stat_weapon_ele}
                                 remove_weapon={modify_stat_weapon}

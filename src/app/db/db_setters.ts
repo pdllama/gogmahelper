@@ -6,5 +6,10 @@ export function addSkillRollQuery(pid:number, roll:skill_roll) {return `
 `}
 
 export function updateSkillRollQuery(pid:number, roll:skill_roll) {return `
-    UPDATE skill_rolls SET set_bonus = '${roll.set_bonus.replace("'", "''")}', group_bonus = '${roll.group_bonus.replace("'", "''")}' WHERE pid = '${pid}' AND roll_num = ${roll.roll_num}
+    UPDATE skill_rolls SET set_bonus = '${roll.set_bonus.replace("'", "''")}', group_bonus = '${roll.group_bonus.replace("'", "''")}' WHERE profile_id = '${pid}' AND roll_num = ${roll.roll_num}
+`}
+
+
+export function deleteSkillRollQuery(pid:number, rollnum:number) { return `
+    DELETE FROM skill_rolls WHERE profile_id = ${pid} AND roll_num = ${rollnum}
 `}
