@@ -22,6 +22,7 @@ type CaptureContainerProps = {
 export default function CaptureContainer({rolls, pid, roll_num, insertRoll, rollType, w, e}:CaptureContainerProps) {
     const add_roll_to_state = useMainStore((state) => rollType === roll_type.BONUSES &&  state.bonus_type === bonus_roll_type.KEEP ? state.add_keep_roll_to_stats : state.add_roll_to_stats)
     const update_last_roll = useCaptureStore((state) => rollType === roll_type.SKILLS ? state.set_last_skill_roll : state.set_last_amend_roll);
+    const increment_roll_num = useMainStore(state => state.increment_roll)
     const roll_exists = rolls ? rolls.filter(ro => ro.roll_num === roll_num).length !== 0 : false
     const last_roll = useCaptureStore((state) => rollType === roll_type.SKILLS ? state.last_skill_roll : state.last_amend_roll)
 
@@ -38,7 +39,8 @@ export default function CaptureContainer({rolls, pid, roll_num, insertRoll, roll
                 saveRollTools={{
                     profile_id: pid, roll_exists, rollType, roll_num, w, e,
                     insertRollIntoState: insertRoll,
-                    add_roll_to_state,
+                    increment_roll_num,
+                    add_roll_to_state, 
                     update_last_roll
                 }}
             />

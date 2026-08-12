@@ -8,6 +8,7 @@ export default async function saveSkillRollToDb (
     roll:skill_roll, pid:number, roll_exists: boolean, rollType: roll_type, w:weapons, e:elements,
     updateRollState: (roll:skill_roll, roll_exists: boolean) => any,
     addRollToState: MainStore["add_roll_to_stats"],
+    incrementRollCount: MainStore["increment_roll"],
     updateLastRoll: CaptureStore["set_last_skill_roll"]
 ) {
 
@@ -15,6 +16,7 @@ export default async function saveSkillRollToDb (
 
     updateRollState(roll, roll_exists);
     addRollToState(roll, rollType, w, e, roll_exists)
+    incrementRollCount(rollType)
     updateLastRoll(roll)
 
 }

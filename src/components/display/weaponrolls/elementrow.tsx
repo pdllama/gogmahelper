@@ -30,9 +30,6 @@ export default function ElementRow({weapon, e, is_end, rollType, modify_stat_ele
     const select_weapon_element = useMainStore((state) => state.select_weapon_element)
     const num_rolls = useMainStore(state => state[rollType === roll_type.SKILLS ? "skill_stats" : "amend_bonus_stats"][weapon]![e]!.num_rolls)
     const god_rolls = useMainStore(state => state[rollType === roll_type.SKILLS ? "skill_stats" : "amend_bonus_stats"][weapon]![e]!.god_rolls)
-    if (e === elements.dragon) {
-        console.log(god_rolls)
-    }
 
     const text_color = `text-${e}`
     const hover_styles = `hover-bg-${e}`

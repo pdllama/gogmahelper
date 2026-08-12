@@ -30,7 +30,8 @@ export type saveRollTools = {
     w:weapons|null,
     e:elements|null,
     insertRollIntoState: (roll:skill_roll|bonus_roll|keep_bonus_roll, roll_exists:boolean) => void;
-    add_roll_to_state: MainStore["add_roll_to_stats"]|MainStore["add_keep_roll_to_stats"];
+    add_roll_to_state: MainStore["add_roll_to_stats"]|MainStore["add_keep_roll_to_stats"]
+    increment_roll_num: MainStore["increment_roll"]
     update_last_roll: CaptureStore["set_last_skill_roll"]|CaptureStore["set_last_amend_roll"]|CaptureStore["set_last_keep_roll"]
 }
 
@@ -200,7 +201,7 @@ export default class VideoProcessor {
         const group_bonus = group_bonus_arr.filter((gs:any) => text.includes(gs))[0]
         
         if (this.saveRollTools) {
-            const {profile_id, roll_num, roll_exists, rollType, w, e, insertRollIntoState, add_roll_to_state, update_last_roll} = this.saveRollTools
+            const {profile_id, roll_num, roll_exists, rollType, w, e, insertRollIntoState, add_roll_to_state, increment_roll_num, update_last_roll} = this.saveRollTools
             const roll = {roll_num: roll_num, set_bonus, group_bonus}
             
             saveSkillRollToDb(
@@ -208,6 +209,7 @@ export default class VideoProcessor {
                 (w as weapons), (e as elements), 
                 insertRollIntoState, 
                 add_roll_to_state as MainStore["add_roll_to_stats"], 
+                increment_roll_num,
                 update_last_roll as (sr:skill_roll) => void
             );
         }
