@@ -7,6 +7,9 @@ import { weapons } from "@custom_types/weapons"
 import { useMainStore } from "../../app/main_store"
 import { useShallow } from "zustand/shallow"
 import ChangeableRollNumberDisplay from "@components/display/rollscreen/generalcomponents/rollnumberdisplay"
+import { skill_roll_preference } from "@custom_types/preferences"
+import SkillPrefDisplay from "@components/display/preferences/skillprefdisplay"
+import NewSkillPreferenceForm from "@components/display/preferences/newskillpref"
 
 
 
@@ -14,15 +17,21 @@ import ChangeableRollNumberDisplay from "@components/display/rollscreen/generalc
 export default function Skills({}) {
 
     const weapons_with_skill_rolls = useMainStore(useShallow(state => Object.keys(state.skill_stats).filter(s => state.skill_stats[s as weapons] != undefined))) as weapons[]
+    const skill_preferences = useMainStore(state => state.skill_preferences);
 
     return <>
         <Text size='3xl' bold>Roll Skills</Text>
         <div className='w-full flex flex-col gap-1'>
             <ChangeableRollNumberDisplay />
-            <Text size="xl" bold classes='text-start ml-3'>Rolls</Text>
+            <Text size="xl" bold classes='text-start ml-3 py-5'>Rolls</Text>
             <GridWrapper>
                 {weapons_with_skill_rolls.map((w:weapons) => <RollDisplay key={`${w}-skill-display`} weapon={w} rollType={roll_type.SKILLS}/>)}
                 {weapons_with_skill_rolls.length !== 14 && <NewRollDisplay current_weapons={weapons_with_skill_rolls} rollType={roll_type.SKILLS}/>}
+            </GridWrapper>
+            <Text size="xl" bold classes='text-start ml-3 py-5'>Skill Preferences</Text>
+            <GridWrapper gap={0.25}>
+                {skill_preferences.map((spref:skill_roll_preference, i:number) => <SkillPrefDisplay key={`skill-preference-display-${i}`} w={spref.weapon} e={spref.element} set_bonus={spref.set_bonus} group_bonus={spref.group_bonus} pref_index={i}/>)}
+                <NewSkillPreferenceForm />
             </GridWrapper>
         </div>
         

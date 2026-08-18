@@ -5,6 +5,7 @@ export type SlidingWindowProps = {
     children:ReactNode,
     transition_type:'slide-down'|'slide-up'|'slide-left'|'slide-right'|'fade',
     classes:string
+    style:Record<string, string>
 }
 
 export const edit_relevant_style = (div_ele:HTMLDivElement, transition_type:SlidingWindowProps["transition_type"], activate:boolean) => {

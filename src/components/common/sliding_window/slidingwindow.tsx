@@ -11,7 +11,7 @@ const init_style = {
 }
 
 // parent component of the window must be position relative
-export default function SlidingWindow({active=false, children, transition_type='slide-down', classes=''}:Partial<SlidingWindowProps>) {
+export default function SlidingWindow({active=false, children, transition_type='slide-down', classes='', style={}}:Partial<SlidingWindowProps>) {
     const isInitialMount = useRef(true);
     const window_ref = useRef<HTMLDivElement|null>(null);
 
@@ -35,6 +35,7 @@ export default function SlidingWindow({active=false, children, transition_type='
                 ${classes}
             `} 
             ref={window_ref}
+            style={style}
         >
             {children}
         </div>

@@ -1,6 +1,5 @@
 import { weapon_labels, weapons } from "@custom_types/weapons"
 import { useMainStore } from "../../../app/main_store"
-import RollDisplayWrapper from "./rolldisplaywrapper"
 import Text from "@components/common/text/text"
 import { get_weapon_label } from "../../../app/util/labels"
 import { element_labels, elements } from "@custom_types/element"
@@ -16,6 +15,7 @@ import ElementRow from "./elementrow"
 import Select from "@components/common/select/select"
 import { roll_type_other } from "@custom_types/rolltype"
 import { add_new_weapon } from "../../../app/store_actions/rolls"
+import GridItemWrapper from "../griditemwrapper"
 
 type RollDisplayProps = {
     weapon:weapons
@@ -42,7 +42,7 @@ export default function RollDisplay({weapon, rollType}:RollDisplayProps) {
     
 
     return (
-        <RollDisplayWrapper>
+        <GridItemWrapper>
             <div className='min-h-[150px] max-h-[150px] w-full rounded-t-xl flex items-center justify-center relative overflow-hidden'>
                 <Text size='3xl' bold classes='z-5'>
                     {get_weapon_label(weapon)}
@@ -168,6 +168,6 @@ export default function RollDisplay({weapon, rollType}:RollDisplayProps) {
 
                 }
             </div>
-        </RollDisplayWrapper>
+        </GridItemWrapper>
     )
 }

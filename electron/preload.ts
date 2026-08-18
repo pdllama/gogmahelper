@@ -3,6 +3,7 @@ import { roll_type } from '@custom_types/rolltype'
 import { weapons } from '@custom_types/weapons'
 import { ipcRenderer, contextBridge } from 'electron'
 import { skill_roll } from '@custom_types/rolltype'
+import { bonus_roll_preference, skill_roll_preference } from '@custom_types/preferences'
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld('ipcRenderer', {
@@ -39,7 +40,13 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   get_keep_rolls: (keep_id:string) => ipcRenderer.invoke("get_keep_rolls", keep_id),
 
   add_skill_roll: (pid:number, roll:skill_roll, roll_exists:boolean) => ipcRenderer.invoke('add_skill_roll', pid, roll, roll_exists),
-  delete_skill_roll: (pid:number, rollnum:number) => ipcRenderer.invoke('delete_skill_roll', pid, rollnum)
+  delete_skill_roll: (pid:number, rollnum:number) => ipcRenderer.invoke('delete_skill_roll', pid, rollnum),
+
+
+
+  add_preference: (rt:roll_type, pref:skill_roll_preference|bonus_roll_preference) => ipcRenderer.invoke('add_preference', rt, pref),
+  edit_preference: (rt:roll_type, orig:skill_roll_preference|bonus_roll_preference, n:skill_roll_preference|bonus_roll_preference) => ipcRenderer.invoke('edit_preference', rt, orig, n),
+  remove_preference: (rt:roll_type, pref:skill_roll_preference|bonus_roll_preference) => ipcRenderer.invoke('remove_preference', rt, pref)
   // You can expose other APTs you need here.
   // ...
 })

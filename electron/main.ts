@@ -6,6 +6,7 @@ import Database from 'better-sqlite3'
 import { weapons } from '@custom_types/weapons'
 import { elements } from '@custom_types/element'
 import { roll_type, skill_roll } from '@custom_types/rolltype'
+import { skill_roll_preference, bonus_roll_preference } from '@custom_types/preferences'
 import get_mh_wilds_window_id from './handlers/get_mh_wilds_id'
 import open_video_settings_window from './handlers/open_video_settings'
 import run_ocr from './handlers/run_ocr'
@@ -112,6 +113,11 @@ app.whenReady().then(() => {
 
   ipcMain.handle('add_skill_roll', async(_:any, pid:number, roll:skill_roll, roll_exists:boolean) => db.add_skill_roll(pid, roll, roll_exists))
   ipcMain.handle('delete_skill_roll', async(_:any, pid:number, rollnum:number) => db.remove_skill_roll(pid, rollnum))
+
+
+  ipcMain.handle('add_preference', async(_:any, rt:roll_type, pref:skill_roll_preference|bonus_roll_preference) => db.add_preference(rt, pref))
+  ipcMain.handle('edit_preference', async(_:any, rt:roll_type, orig:skill_roll_preference|bonus_roll_preference, n: skill_roll_preference|bonus_roll_preference) => db.edit_preference(rt, orig, n))
+  ipcMain.handle('remove_preference', async(_:any, rt:roll_type, pref:skill_roll_preference|bonus_roll_preference) => db.remove_preference(rt, pref))
 
   ipcMain.on('open_video_settings', async(_, rollType:roll_type) => open_video_settings_window(rollType, child!, win, VITE_DEV_SERVER_URL, RENDERER_DIST, __dirname))
   // ipcMain.handle('open_video_settings', async() => open_video_settings_window(child!, win, VITE_DEV_SERVER_URL, RENDERER_DIST))

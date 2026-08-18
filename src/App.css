@@ -97,6 +97,9 @@
 .bg-secondary {
   background-color: var(--secondary);
 }
+.bg-tertiary {
+  background-color: var(--tertiary);
+}
 
 
 

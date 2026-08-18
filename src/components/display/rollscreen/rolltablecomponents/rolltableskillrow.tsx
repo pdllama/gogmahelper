@@ -5,6 +5,7 @@ import "./rolltablecomp.css"
 import { MouseEvent, useEffect, useRef, useState } from "react";
 import Button from "@components/common/button/button";
 import SlidingWindow from "@components/common/sliding_window/slidingwindow";
+import { useMainStore } from "@app/main_store";
 
 type cond_skill_roll = rolltabletypes.cond_skill_roll;
 
@@ -14,6 +15,7 @@ const group_bonus_arr:group_bonus_skill[] = Object.values(group_bonus_skill);
 type RollTableSkillRowProps = {
     rollNum:number,
     highlighted:boolean,
+    desired: boolean,
     setSkill:set_bonus_skill|"",
     groupSkill:group_bonus_skill|""
     selectRoll:(rollnum:number, roll:any) => void;
@@ -22,7 +24,7 @@ type RollTableSkillRowProps = {
     editSkillRoll: (rollnum:number, type:"sb"|"gb", change:set_bonus_skill|group_bonus_skill|"") => void;
 }
 
-export default function RollTableSkillRow({rollNum, highlighted, setSkill, groupSkill, selectRoll, selected, editRollData, editSkillRoll}:RollTableSkillRowProps) {
+export default function RollTableSkillRow({rollNum, highlighted, desired, setSkill, groupSkill, selectRoll, selected, editRollData, editSkillRoll}:RollTableSkillRowProps) {
 
     // Both being empty means its a roll number without a 
     const emptySetSkill = !setSkill;
@@ -35,13 +37,13 @@ export default function RollTableSkillRow({rollNum, highlighted, setSkill, group
             rowRef.current.scrollIntoView();
         }
     }, [highlighted])
-
+    
     // const [deleteConf, setDeleteConf] = useState(false)
 
     return (
         <tr 
             ref={rowRef}
-            className={`border-b border-white ${highlighted ? 'bg-secondary' : ''}${selected ? ' selected-row' : ''} relative overflow-hidden`}
+            className={`border-b border-white ${highlighted ? 'bg-secondary' : desired ? 'bg-tertiary' : ''}${selected ? ' selected-row' : ''} relative overflow-hidden`}
             onDoubleClick={() => {
                 selectRoll(rollNum, {roll_num: rollNum, set_bonus: setSkill, group_bonus: groupSkill});
             }}

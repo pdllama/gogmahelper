@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import "./../gridsizes.css"
+import "./gridsizes.css"
 
 type WrapperProps = Partial<{
     children:ReactNode, 
@@ -7,7 +7,7 @@ type WrapperProps = Partial<{
     no_shadow:boolean
 }>
 
-export default function RollDisplayWrapper({children, classes='', no_shadow=false}:WrapperProps) {
+export default function GridItemWrapper({children, classes='', no_shadow=false}:WrapperProps) {
 
     return (
         <>

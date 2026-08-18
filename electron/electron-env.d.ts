@@ -43,6 +43,10 @@ interface api {
   add_skill_roll(pid:number, roll:skill_roll, roll_exists:boolean): void
   delete_skill_roll(pid:number, rollnum:number): void
 
+  add_preference: (rt:roll_type, pref:skill_roll_preference|bonus_roll_preference) => Promise<any>
+  edit_preference: (rt:roll_type, orig:skill_roll_preference|bonus_roll_preference, n:skill_roll_preference|bonus_roll_preference) => Promise<any>
+  remove_preference: (rt:roll_type, pref:skill_roll_preference|bonus_roll_preference) => Promise<any>
+
 }
 
 // Used in Renderer process, expose in `preload.ts`

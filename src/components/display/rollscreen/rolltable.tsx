@@ -14,6 +14,8 @@ import { useAlertStore } from "@app/alerts/alert_store";
 import { useMainStore } from "@app/main_store";
 import { weapons } from "@custom_types/weapons";
 import { elements } from "@custom_types/element";
+import { useShallow } from "zustand/shallow";
+import { bonus_rolls_array, skill_rolls_array } from "@custom_types/preferences";
 
 type cond_skill_roll = rolltabletypes.cond_skill_roll;
 type cond_amend_roll = rolltabletypes.cond_amend_roll;
@@ -62,9 +64,11 @@ export default function RollTable({rolls, roll_num, rollType, bonusRollType, loa
     const remove_from_stats = useMainStore(state => state.remove_roll_from_stats)
     const add_roll_to_stats = useMainStore(state => state.add_roll_to_stats)
     const add_keep_roll_to_stats = useMainStore(state => state.add_keep_roll_to_stats)
+    const applicable_preferences = useMainStore(state => (rollType === roll_type.SKILLS ? state.skill_preferences : state.bonus_preferences))
 
     const [edit, setEdit] = useState<editState>({curr: null, roll: null})
     const [newRoll, setNewRoll] = useState<newRollState>({rollNum: "", rollExists: false, set_bonus: '', group_bonus: '', reinforcements: ["", "", "", "", ""], reinforcement_levels: ["", "", "", "", ""], error: ""})
+    const [newRollScroll, setNewRollScroll] = useState(0);
 
     const selectRoll = (rollnum:number, roll:cond_skill_roll|cond_amend_roll|cond_keep_roll) => {
         if (rollnum === edit.curr) {setEdit({curr:null, roll:null})}
@@ -149,6 +153,7 @@ export default function RollTable({rolls, roll_num, rollType, bonusRollType, loa
         return () => window.removeEventListener("keydown", arrowHandler);
     }, [edit.curr, rolls])
     
+    const containerRef = useRef<HTMLDivElement>(null)
 
     return (
         <>
@@ -166,8 +171,7 @@ export default function RollTable({rolls, roll_num, rollType, bonusRollType, loa
                 }   
             `}
         </style>
-        
-        <div className="p-1 h-full min-h-[200px] overflow-y-scroll overflow-x-hidden flex flex-col w-full relative">
+        <div ref={containerRef} className="p-1 h-full min-h-[200px] overflow-y-scroll overflow-x-hidden flex flex-col w-full relative" onScroll={() => setNewRollScroll(!containerRef.current ? newRollScroll : containerRef.current.scrollTop)}>
         <table 
             className="border border-white text-white rounded-lg"
         >
@@ -188,6 +192,11 @@ export default function RollTable({rolls, roll_num, rollType, bonusRollType, loa
                     }
 
                     const highlighted = current_roll_num === roll_num
+                    const desired = isRoll && (
+                        rollType === roll_type.SKILLS ? roll_type_other.is_desired_skill_roll(w!, e!, roll_info as skill_roll, applicable_preferences as skill_rolls_array) : 
+                        bonusRollType === bonus_roll_type.AMEND && roll_type_other.is_desired_amend_roll(w!, e!, roll_info as bonus_roll, applicable_preferences as bonus_rolls_array) 
+                            // roll_type_other.is_desired_keep_roll() // add keep bonus roll conditional
+                    )
                     
                     // const trueRollInfo = rollType === roll_type.SKILLS ? roll_info as skill_roll : 
                     //     bonus_type === bonus_roll_type.AMEND ? roll_info as bonus_roll : 
@@ -197,6 +206,7 @@ export default function RollTable({rolls, roll_num, rollType, bonusRollType, loa
                             key={`roll-${current_roll_num}`}
                             rollNum={current_roll_num}
                             highlighted={highlighted}
+                            desired={desired}
                             setSkill={isRoll ? (roll_info as skill_roll|cond_skill_roll).set_bonus : ""}
                             groupSkill={isRoll ? (roll_info as skill_roll|cond_skill_roll).group_bonus : ""}
                             selectRoll={selectRoll}
@@ -227,7 +237,7 @@ export default function RollTable({rolls, roll_num, rollType, bonusRollType, loa
             } 
             </tbody>
         </table>
-        <SlidingWindow active={addRollScreen} classes="z-10 bg-black w-full h-fit p-2 fixed" transition_type="slide-right">
+        <SlidingWindow active={addRollScreen} classes={`z-15 bg-black w-full h-fit p-2`} style={{top: `${newRollScroll}px`}} transition_type="slide-right">
             <div className="flex flex-col gap-2 justify-center">
             <Text size='xl' bold>Add New {rollType === roll_type.SKILLS ? "Skill" : "Bonus"} Roll</Text>
             {newRoll.error && <Text size='sm' classes="text-red-500">{newRoll.error}</Text>}
@@ -289,6 +299,7 @@ export default function RollTable({rolls, roll_num, rollType, bonusRollType, loa
             </div>
         </SlidingWindow>
         </div>
+        
         </>
     )
 }

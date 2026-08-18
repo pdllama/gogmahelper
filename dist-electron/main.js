@@ -369,6 +369,9 @@ function deleteSkillRollQuery(pid, rollnum) {
     DELETE FROM skill_rolls WHERE profile_id = ${pid} AND roll_num = ${rollnum}
 `;
 }
+function sanitizeSkillName(skill) {
+  return skill.indexOf("'") !== -1 ? `${skill.slice(0, skill.indexOf("'"))}''${skill.slice(skill.indexOf("'") + 1, skill.length)}` : skill;
+}
 class AppDatabase {
   db;
   constructor(db) {
@@ -380,25 +383,6 @@ class AppDatabase {
     console.log("Database Initialized!");
   }
   initialize_stats() {
-    const skill_stats = {};
-    for (let result of this.db.prepare(gogma_database.skill_stats_query).all()) {
-      if (skill_stats[result.weapon] === void 0) {
-        skill_stats[result.weapon] = {};
-      }
-      skill_stats[result.weapon][result.element] = { num_rolls: result.num_rolls, god_rolls: JSON.parse(result.god_rolls) };
-    }
-    const amend_bonus_stats = {};
-    for (let result of this.db.prepare(gogma_database.amend_stats_query).all()) {
-      if (amend_bonus_stats[result.weapon] === void 0) {
-        amend_bonus_stats[result.weapon] = {};
-      }
-      amend_bonus_stats[result.weapon][result.element] = {
-        num_rolls: result.num_rolls,
-        god_rolls: JSON.parse(result.god_rolls).map((gr) => {
-          return { roll_num: gr.roll_num, roll: gogma_database.convert_db_reinforcements_to_app(gr.reinforcements, gr.reinforcement_levels) };
-        })
-      };
-    }
     const keep_bonus_stats = {};
     const keep_bonus_profiles = {};
     for (let result of this.db.prepare(gogma_database.keep_stats_query).all()) {
@@ -416,7 +400,7 @@ class AppDatabase {
         })
       };
     }
-    return { ss: skill_stats, bs: amend_bonus_stats, kbs: keep_bonus_stats, kbp: keep_bonus_profiles };
+    return { ss: this.get_skill_stats(), bs: this.get_amend_stats(), kbs: keep_bonus_stats, kbp: keep_bonus_profiles };
   }
   initialize_preferences() {
     return {
@@ -426,21 +410,31 @@ class AppDatabase {
       })
     };
   }
-  // CREATE TABLE IF NOT EXISTS skill_rolls (
-  //     roll_num INTEGER,
-  //     profile_id INTEGER REFERENCES weapon_profile(profile_id),
-  //     set_bonus TEXT CHECK( set_bonus IN (${string_set_bonus_enum}, '') ),
-  //     group_bonus TEXT CHECK( group_bonus IN (${string_group_bonus_enum}, '') ),
-  //     PRIMARY KEY (roll_num, profile_id)
-  // );
-  // CREATE TABLE IF NOT EXISTS amend_bonus_rolls (
-  //     roll_num INTEGER,
-  //     profile_id INTEGER REFERENCES weapon_profile(profile_id),
-  //     reinforcements TEXT,
-  //     reinforcement_levels TEXT,
-  //     reinforcements_canonical TEXT,
-  //     PRIMARY KEY (roll_num, profile_id)
-  // );
+  get_skill_stats() {
+    const skill_stats = {};
+    for (let result of this.db.prepare(gogma_database.skill_stats_query).all()) {
+      if (skill_stats[result.weapon] === void 0) {
+        skill_stats[result.weapon] = {};
+      }
+      skill_stats[result.weapon][result.element] = { num_rolls: result.num_rolls, god_rolls: JSON.parse(result.god_rolls) };
+    }
+    return skill_stats;
+  }
+  get_amend_stats() {
+    const amend_bonus_stats = {};
+    for (let result of this.db.prepare(gogma_database.amend_stats_query).all()) {
+      if (amend_bonus_stats[result.weapon] === void 0) {
+        amend_bonus_stats[result.weapon] = {};
+      }
+      amend_bonus_stats[result.weapon][result.element] = {
+        num_rolls: result.num_rolls,
+        god_rolls: JSON.parse(result.god_rolls).map((gr) => {
+          return { roll_num: gr.roll_num, roll: gogma_database.convert_db_reinforcements_to_app(gr.reinforcements, gr.reinforcement_levels) };
+        })
+      };
+    }
+    return amend_bonus_stats;
+  }
   add_weapon(weapon, element, rollType) {
     const profile_id = gogma_database.get_profile_id(this.db, weapon, element, true);
     const insert_query = rollType === roll_type.SKILLS ? `INSERT INTO skill_rolls(roll_num, profile_id, set_bonus, group_bonus) VALUES (0, ${profile_id}, '', '')` : `INSERT INTO amend_bonus_rolls(roll_num, profile_id, reinforcements, reinforcement_levels, reinforcements_canonical) VALUES (0, ${profile_id}, '', '', '')`;
@@ -504,6 +498,70 @@ class AppDatabase {
   }
   remove_skill_roll(pid, roll_num) {
     this.db.exec(deleteSkillRollQuery(pid, roll_num));
+  }
+  add_preference(rt, pref) {
+    if (rt === roll_type.SKILLS) {
+      const spref = pref;
+      this.db.exec(`INSERT INTO skill_preferences(weapon, element, set_bonus, group_bonus) VALUES (${spref.weapon ? `'${spref.weapon}'` : "NULL"}, ${spref.element ? `'${spref.element}'` : "NULL"}, '${sanitizeSkillName(spref.set_bonus)}', '${sanitizeSkillName(spref.group_bonus)}')`);
+    } else {
+      const bpref = pref;
+      let textReinforcements = "";
+      for (let i = 0; i < bpref.reinforcements.length; i++) {
+        const reinf = bpref.reinforcements[i];
+        if (i != 0) {
+          textReinforcements += " ";
+        }
+        textReinforcements += reinf;
+      }
+      this.db.exec(`INSERT INTO bonus_preferences(weapon, element, reinforcements) VALUES (${bpref.weapon ? `'${bpref.weapon}'` : "NULL"}, ${bpref.element ? `'${bpref.element}'` : "NULL"}, '${textReinforcements}')`);
+    }
+    return rt === roll_type.SKILLS ? this.get_skill_stats() : this.get_amend_stats();
+  }
+  edit_preference(rt, orig, n) {
+    const origw = !orig.weapon ? "IS NULL" : `= '${orig.weapon}'`;
+    const orige = !orig.element ? "IS NULL" : `= '${orig.element}'`;
+    const nw = !n.weapon ? "NULL" : `'${n.weapon}'`;
+    const ne = !n.element ? "NULL" : `'${n.element}'`;
+    if (rt === roll_type.SKILLS) {
+      const sorig = orig;
+      const sn = n;
+      this.db.exec(`UPDATE skill_preferences SET weapon = ${nw}, element = ${ne}, set_bonus = '${sanitizeSkillName(sn.set_bonus)}', group_bonus = '${sanitizeSkillName(sn.group_bonus)}' WHERE weapon ${origw} AND element ${orige} AND set_bonus = '${sanitizeSkillName(sorig.set_bonus)}' AND group_bonus = '${sanitizeSkillName(sorig.group_bonus)}'`);
+    } else {
+      let textReinfOrig = "";
+      let textReinfNew = "";
+      for (let i = 0; i < 5; i++) {
+        const reinfOrig = orig.reinforcements[i];
+        const reinfNew = n.reinforcements[i];
+        if (i !== 0) {
+          textReinfOrig += " ";
+          textReinfNew += " ";
+        }
+        textReinfOrig += reinfOrig;
+        textReinfNew += reinfNew;
+      }
+      this.db.exec(`UPDATE bonus_preferences SET weapon = ${nw}, element = ${ne}, reinforcements = '${textReinfNew}' WHERE weapon ${origw} AND element ${orige} AND reinforcements = '${textReinfOrig}'`);
+    }
+    return rt === roll_type.SKILLS ? this.get_skill_stats() : this.get_amend_stats();
+  }
+  remove_preference(rt, pref) {
+    const w = pref.weapon ? `= '${pref.weapon}'` : "IS NULL";
+    const e = pref.element ? `= '${pref.element}'` : "IS NULL";
+    if (rt === roll_type.SKILLS) {
+      const spref = pref;
+      this.db.exec(`DELETE FROM skill_preferences WHERE weapon ${w} AND element ${e} AND set_bonus = '${sanitizeSkillName(spref.set_bonus)}' AND group_bonus = '${sanitizeSkillName(spref.group_bonus)}'`);
+    } else {
+      const bpref = pref;
+      let textreinf = "";
+      for (let i = 0; i < 5; i++) {
+        const reinf = bpref.reinforcements[i];
+        if (i !== 0) {
+          textreinf += " ";
+        }
+        textreinf += reinf;
+      }
+      this.db.exec(`DELETE FROM bonus_preferences WHERE weapon ${w} AND element ${e} AND reinforcements = '${textreinf}'`);
+    }
+    return rt === roll_type.SKILLS ? this.get_skill_stats() : this.get_amend_stats();
   }
 }
 async function get_mh_wilds_window_id() {
@@ -685,6 +743,9 @@ app.whenReady().then(() => {
   ipcMain.handle("get_keep_rolls", async (_, keep_id) => db.get_keep_rolls(keep_id));
   ipcMain.handle("add_skill_roll", async (_, pid, roll, roll_exists) => db.add_skill_roll(pid, roll, roll_exists));
   ipcMain.handle("delete_skill_roll", async (_, pid, rollnum) => db.remove_skill_roll(pid, rollnum));
+  ipcMain.handle("add_preference", async (_, rt, pref) => db.add_preference(rt, pref));
+  ipcMain.handle("edit_preference", async (_, rt, orig, n) => db.edit_preference(rt, orig, n));
+  ipcMain.handle("remove_preference", async (_, rt, pref) => db.remove_preference(rt, pref));
   ipcMain.on("open_video_settings", async (_, rollType) => open_video_settings_window(rollType, child, win, VITE_DEV_SERVER_URL, RENDERER_DIST, __dirname$1));
   createWindow();
 }).catch((err) => {

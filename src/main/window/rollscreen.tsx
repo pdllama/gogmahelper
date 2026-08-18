@@ -61,7 +61,7 @@ export default function RollScreen({w, e}:RollScreenProps) {
 
     return (
         <>
-        <div className='w-full h-full flex flex-col gap-3'>
+        <div className='w-full h-full flex flex-col gap-3 relative'>
             <Button disableRipple classes="absolute top-[5px] left-[5px] w-fit min-h-[40px] text-[12px]" onClick={() => select_weapon_element(null, null)}>
                 <Text size="lg">Go Back</Text>
             </Button>

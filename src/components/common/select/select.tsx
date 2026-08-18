@@ -10,9 +10,10 @@ type SelectProps = Partial<{
     unselected_option_label:string,
     on_change: (value:any) => void
     on_focus: () => void;
+    disable_unselected: boolean
 }>
 
-export default function Select({selected='', options=[], label_map=undefined, select_classes='', option_classes='', unselected_option_label='Select an option', on_change=() => {}, on_focus=() => {}}:SelectProps) {
+export default function Select({selected='', options=[], label_map=undefined, select_classes='', option_classes='', unselected_option_label='Select an option', on_change=() => {}, on_focus=() => {}, disable_unselected=false}:SelectProps) {
 
 
     return (
@@ -22,7 +23,7 @@ export default function Select({selected='', options=[], label_map=undefined, se
             onChange={(new_value:React.ChangeEvent<HTMLSelectElement>) => on_change(new_value.target.value)}
             onFocus={on_focus}
         >
-            <option value={''} label={unselected_option_label} className={`italic ${option_classes}`}/>
+            {!disable_unselected && <option value={''} label={unselected_option_label} className={`italic ${option_classes}`}/>}
             {options.map((opt:any, i:number) => {
                 return (
                     <option key={`${i}-${opt}`} value={opt} label={label_map ? label_map[opt] : opt} className={`not-italic ${option_classes}`}/>

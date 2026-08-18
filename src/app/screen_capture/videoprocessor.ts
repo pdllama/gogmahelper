@@ -195,6 +195,8 @@ export default class VideoProcessor {
         const imageBuffer = new Uint8Array(arrayBuffer);
         const text = await window.ipcRenderer.run_ocr(imageBuffer)
 
+        console.log(text)
+
 
         // The text comes out sometimes with random nonsense characters, so we have to filter it out.
         const set_bonus = set_bonus_arr.filter((sbs:any) => text.includes(sbs))[0]

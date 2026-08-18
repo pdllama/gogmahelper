@@ -29,7 +29,10 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   get_rolls: (weapon, element, rollType) => electron.ipcRenderer.invoke("get_rolls", weapon, element, rollType),
   get_keep_rolls: (keep_id) => electron.ipcRenderer.invoke("get_keep_rolls", keep_id),
   add_skill_roll: (pid, roll, roll_exists) => electron.ipcRenderer.invoke("add_skill_roll", pid, roll, roll_exists),
-  delete_skill_roll: (pid, rollnum) => electron.ipcRenderer.invoke("delete_skill_roll", pid, rollnum)
+  delete_skill_roll: (pid, rollnum) => electron.ipcRenderer.invoke("delete_skill_roll", pid, rollnum),
+  add_preference: (rt, pref) => electron.ipcRenderer.invoke("add_preference", rt, pref),
+  edit_preference: (rt, orig, n) => electron.ipcRenderer.invoke("edit_preference", rt, orig, n),
+  remove_preference: (rt, pref) => electron.ipcRenderer.invoke("remove_preference", rt, pref)
   // You can expose other APTs you need here.
   // ...
 });

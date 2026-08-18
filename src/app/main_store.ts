@@ -1,5 +1,5 @@
 import { elements } from '@custom_types/element'
-import { bonus_rolls_array, skill_rolls_array } from '@custom_types/preferences'
+import { bonus_roll_preference, bonus_rolls_array, skill_roll_preference, skill_rolls_array } from '@custom_types/preferences'
 import { weapon_skill_stat, weapon_bonus_stat, keep_bonus_stat, keep_bonus_profile, roll_type, bonus_roll_type, skill_roll, bonus_roll, keep_bonus_roll } from '@custom_types/rolltype'
 import { weapons } from '@custom_types/weapons'
 import { create } from 'zustand'
@@ -39,6 +39,11 @@ export interface MainStore {
     set_roll_number: (rt:roll_type, n:number) => void,
     reset_roll_num: (rt:roll_type) => void,
 
+    add_preference: (rt:roll_type, pref:skill_roll_preference|bonus_roll_preference, newstats: weapon_skill_stat|weapon_bonus_stat) => void,
+    edit_preference: (rt:roll_type, pref:skill_roll_preference|bonus_roll_preference, i:number, newstats: weapon_skill_stat|weapon_bonus_stat) => void,
+    remove_preference: (rt:roll_type, i:number, newstats: weapon_skill_stat|weapon_bonus_stat) => void
+
+
     initialize_state: (ss:weapon_skill_stat, bs: weapon_bonus_stat, kbs: keep_bonus_stat, kbp: Record<string, keep_bonus_profile>, sp: skill_rolls_array, bp: bonus_rolls_array) => void,
     change_menu: (new_menu:menu) => void,
 
@@ -60,7 +65,6 @@ export const useMainStore = create<MainStore>((set) => ({
     keep_bonus_profiles: {},
 
     skill_preferences: [],
-    
     bonus_preferences: [],
 
     modify_skill_stat_weapon: modify_skill_stat_weapon(set),
@@ -78,6 +82,24 @@ export const useMainStore = create<MainStore>((set) => ({
     remove_roll_from_stats: remove_roll_from_stats(set),
     set_roll_number: (rt:roll_type, n:number) => set(() => (rt == roll_type.SKILLS ? {skill_roll_num: n} : {bonus_roll_num: n})),
     reset_roll_num: (rt:roll_type) => set(() => (rt == roll_type.SKILLS ? {skill_roll_num: 1} : {bonus_roll_num: 1})),
+
+
+    add_preference: (rt:roll_type, pref:skill_roll_preference|bonus_roll_preference, newstats: weapon_skill_stat|weapon_bonus_stat) => set((state) => (
+        rt === roll_type.SKILLS ? 
+        {skill_preferences: [...state.skill_preferences, pref as skill_roll_preference], skill_stats: newstats as weapon_skill_stat} : 
+        {bonus_preferences: [...state.bonus_preferences, pref as bonus_roll_preference], amend_bonus_stats: newstats as weapon_bonus_stat}
+    )),
+    edit_preference: (rt:roll_type, pref:skill_roll_preference|bonus_roll_preference, i:number, newstats: weapon_skill_stat|weapon_bonus_stat) => set((state) => (
+        rt === roll_type.SKILLS ? 
+        {skill_preferences: state.skill_preferences.map((p:skill_roll_preference, i2:number) => i === i2 ? pref as skill_roll_preference : p), skill_stats: newstats as weapon_skill_stat} : 
+        {bonus_preferences: state.bonus_preferences.map((p:bonus_roll_preference, i2:number) => i === i2 ? pref as bonus_roll_preference : p), amend_bonus_stats: newstats as weapon_bonus_stat}
+    )),
+    remove_preference: (rt: roll_type, i:number, newstats: weapon_skill_stat|weapon_bonus_stat) => set((state) => (
+        rt === roll_type.SKILLS ? 
+        {skill_preferences: state.skill_preferences.filter((_:any, i2:number) => i !== i2), skill_stats: newstats as weapon_skill_stat} : 
+        {bonus_preferences: state.bonus_preferences.filter((_:any, i2:number) => i !== i2), amend_bonus_stats: newstats as weapon_bonus_stat}
+    )),
+
 
     initialize_state: (ss:weapon_skill_stat, bs: weapon_bonus_stat, kbs: keep_bonus_stat, kbp: Record<string, keep_bonus_profile>, sp: skill_rolls_array, bp: bonus_rolls_array) => 
         set(() => ({skill_stats: ss, amend_bonus_stats: bs, keep_bonus_stats: kbs, keep_bonus_profiles: kbp, skill_preferences:sp, bonus_preferences: bp})),

@@ -12,6 +12,8 @@ import { bonus_db_to_app, levels_db_to_app } from './util/bonuses_formats';
 import five_level_rolls = roll_type_other.five_level_rolls
 import five_reinforcement_rolls = roll_type_other.five_reinforcement_rolls
 import { addSkillRollQuery, deleteSkillRollQuery, updateSkillRollQuery } from './db/db_setters';
+import { bonus_roll_preference, skill_roll_preference } from '@custom_types/preferences';
+import sanitizeSkillName from './util/sanitizeskillname';
 
 // Types of what gets sent back as a result of the db_query
 type skill_stats_query = {
@@ -57,27 +59,6 @@ class AppDatabase {
         console.log('Database Initialized!')
     }
     initialize_stats() {
-        const skill_stats:weapon_skill_stat = {}
-        for (let result of this.db.prepare<[], skill_stats_query>(gogma_database.skill_stats_query).all()) {
-            if (skill_stats[result.weapon] === undefined) {
-                skill_stats[result.weapon] = {}
-            }
-            skill_stats[result.weapon]![result.element] = {num_rolls:result.num_rolls, god_rolls: JSON.parse(result.god_rolls) as Array<{roll_num: number, set_bonus: set_bonus_skill, group_bonus: group_bonus_skill}>};
-        }
-
-        const amend_bonus_stats:weapon_bonus_stat = {}
-        for (let result of this.db.prepare<[], amend_bonus_stats_query>(gogma_database.amend_stats_query).all()) {
-            if (amend_bonus_stats[result.weapon] === undefined) {
-                amend_bonus_stats[result.weapon] = {}
-            }
-            amend_bonus_stats[result.weapon]![result.element] = {
-                num_rolls: result.num_rolls, 
-                god_rolls: JSON.parse(result.god_rolls).map((gr:{roll_num: number, reinforcements: string, reinforcement_levels: string}) => {
-                    return {roll_num: gr.roll_num, roll: gogma_database.convert_db_reinforcements_to_app(gr.reinforcements, gr.reinforcement_levels)}
-                })
-            } 
-        }
-
         const keep_bonus_stats:keep_bonus_stat = {}
         const keep_bonus_profiles:Record<string, keep_bonus_profile> = {}
         for (let result of this.db.prepare<[], keep_bonus_stats_query>(gogma_database.keep_stats_query).all()) {
@@ -94,7 +75,7 @@ class AppDatabase {
             }
         }
 
-        return {ss: skill_stats, bs: amend_bonus_stats, kbs: keep_bonus_stats, kbp: keep_bonus_profiles}
+        return {ss: this.get_skill_stats(), bs: this.get_amend_stats(), kbs: keep_bonus_stats, kbp: keep_bonus_profiles}
     }
     initialize_preferences() {
         return {
@@ -122,22 +103,32 @@ class AppDatabase {
         // }
     }
 
-    // CREATE TABLE IF NOT EXISTS skill_rolls (
-    //     roll_num INTEGER,
-    //     profile_id INTEGER REFERENCES weapon_profile(profile_id),
-    //     set_bonus TEXT CHECK( set_bonus IN (${string_set_bonus_enum}, '') ),
-    //     group_bonus TEXT CHECK( group_bonus IN (${string_group_bonus_enum}, '') ),
-    //     PRIMARY KEY (roll_num, profile_id)
-    // );
+    get_skill_stats() {
+        const skill_stats:weapon_skill_stat = {}
+        for (let result of this.db.prepare<[], skill_stats_query>(gogma_database.skill_stats_query).all()) {
+            if (skill_stats[result.weapon] === undefined) {
+                skill_stats[result.weapon] = {}
+            }
+            skill_stats[result.weapon]![result.element] = {num_rolls:result.num_rolls, god_rolls: JSON.parse(result.god_rolls) as Array<{roll_num: number, set_bonus: set_bonus_skill, group_bonus: group_bonus_skill}>};
+        }
+        return skill_stats
+    }
+    get_amend_stats() {
+        const amend_bonus_stats:weapon_bonus_stat = {}
+        for (let result of this.db.prepare<[], amend_bonus_stats_query>(gogma_database.amend_stats_query).all()) {
+            if (amend_bonus_stats[result.weapon] === undefined) {
+                amend_bonus_stats[result.weapon] = {}
+            }
+            amend_bonus_stats[result.weapon]![result.element] = {
+                num_rolls: result.num_rolls, 
+                god_rolls: JSON.parse(result.god_rolls).map((gr:{roll_num: number, reinforcements: string, reinforcement_levels: string}) => {
+                    return {roll_num: gr.roll_num, roll: gogma_database.convert_db_reinforcements_to_app(gr.reinforcements, gr.reinforcement_levels)}
+                })
+            } 
+        }
+        return amend_bonus_stats
+    }
 
-    // CREATE TABLE IF NOT EXISTS amend_bonus_rolls (
-    //     roll_num INTEGER,
-    //     profile_id INTEGER REFERENCES weapon_profile(profile_id),
-    //     reinforcements TEXT,
-    //     reinforcement_levels TEXT,
-    //     reinforcements_canonical TEXT,
-    //     PRIMARY KEY (roll_num, profile_id)
-    // );
     add_weapon(weapon:weapons, element:elements, rollType:roll_type) {
         // This function adds a new weapon/element combo to a rolltype
 
@@ -218,6 +209,64 @@ class AppDatabase {
     }
     remove_skill_roll(pid:number, roll_num:number) {
         this.db.exec(deleteSkillRollQuery(pid, roll_num));
+    }
+
+
+    add_preference(rt:roll_type, pref:skill_roll_preference|bonus_roll_preference) {
+        if (rt === roll_type.SKILLS) {
+            const spref = pref as skill_roll_preference
+            this.db.exec(`INSERT INTO skill_preferences(weapon, element, set_bonus, group_bonus) VALUES (${spref.weapon ? `'${spref.weapon}'` : 'NULL'}, ${spref.element ? `'${spref.element}'` : 'NULL'}, '${sanitizeSkillName(spref.set_bonus)}', '${sanitizeSkillName(spref.group_bonus)}')`)
+        } else {
+            const bpref = pref as bonus_roll_preference
+            let textReinforcements = ''
+            for (let i = 0; i < bpref.reinforcements.length; i++) {
+                const reinf = bpref.reinforcements[i]
+                if (i != 0) {textReinforcements+=" "}
+                textReinforcements+=reinf
+            }
+            this.db.exec(`INSERT INTO bonus_preferences(weapon, element, reinforcements) VALUES (${bpref.weapon ? `'${bpref.weapon}'` : 'NULL'}, ${bpref.element ? `'${bpref.element}'` : 'NULL'}, '${textReinforcements}')`)
+        }
+        return rt === roll_type.SKILLS ? this.get_skill_stats() : this.get_amend_stats()
+    }
+    edit_preference(rt:roll_type, orig:skill_roll_preference|bonus_roll_preference, n:skill_roll_preference|bonus_roll_preference) {
+        const origw = !orig.weapon ? "IS NULL" : `= '${orig.weapon}'`
+        const orige = !orig.element ? "IS NULL" : `= '${orig.element}'`
+        const nw = !n.weapon ? "NULL" : `'${n.weapon}'`
+        const ne = !n.element ? "NULL" : `'${n.element}'`
+        if (rt === roll_type.SKILLS) {
+            const sorig = orig as skill_roll_preference
+            const sn = n as skill_roll_preference
+            this.db.exec(`UPDATE skill_preferences SET weapon = ${nw}, element = ${ne}, set_bonus = '${sanitizeSkillName(sn.set_bonus)}', group_bonus = '${sanitizeSkillName(sn.group_bonus)}' WHERE weapon ${origw} AND element ${orige} AND set_bonus = '${sanitizeSkillName(sorig.set_bonus)}' AND group_bonus = '${sanitizeSkillName(sorig.group_bonus)}'`)
+        } else {
+            let textReinfOrig = ''
+            let textReinfNew = ''
+            for (let i = 0; i < 5; i++) {
+                const reinfOrig = (orig as bonus_roll_preference).reinforcements[i]
+                const reinfNew = (n as bonus_roll_preference).reinforcements[i]
+                if (i !== 0) {textReinfOrig+=" "; textReinfNew+=" ";}
+                textReinfOrig+=reinfOrig; textReinfNew+=reinfNew
+            }
+            this.db.exec(`UPDATE bonus_preferences SET weapon = ${nw}, element = ${ne}, reinforcements = '${textReinfNew}' WHERE weapon ${origw} AND element ${orige} AND reinforcements = '${textReinfOrig}'`)
+        }
+        return rt === roll_type.SKILLS ? this.get_skill_stats() : this.get_amend_stats()
+    }
+    remove_preference(rt:roll_type, pref:skill_roll_preference|bonus_roll_preference) {
+        const w = pref.weapon ? `= '${pref.weapon}'` : 'IS NULL'
+        const e = pref.element ? `= '${pref.element}'` : 'IS NULL'
+        if (rt === roll_type.SKILLS) {
+            const spref = pref as skill_roll_preference
+            this.db.exec(`DELETE FROM skill_preferences WHERE weapon ${w} AND element ${e} AND set_bonus = '${sanitizeSkillName(spref.set_bonus)}' AND group_bonus = '${sanitizeSkillName(spref.group_bonus)}'`)
+        } else {
+            const bpref = pref as bonus_roll_preference
+            let textreinf = ''
+            for (let i = 0; i < 5; i++) {
+                const reinf = bpref.reinforcements[i]
+                if (i !== 0) {textreinf += ' '}
+                textreinf+=reinf
+            }
+            this.db.exec(`DELETE FROM bonus_preferences WHERE weapon ${w} AND element ${e} AND reinforcements = '${textreinf}'`)
+        }
+        return rt === roll_type.SKILLS ? this.get_skill_stats() : this.get_amend_stats()
     }
 }
 
