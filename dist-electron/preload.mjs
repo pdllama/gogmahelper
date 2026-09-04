@@ -25,11 +25,13 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   open_video_settings: (rollType) => electron.ipcRenderer.send("open_video_settings", rollType),
   // video settings handlers
   get_vs_init_state: () => electron.ipcRenderer.invoke("get_vs_init_state"),
-  run_ocr: (img_buffer) => electron.ipcRenderer.invoke("run_ocr", img_buffer),
+  run_ocr: (img_buffer, rollType) => electron.ipcRenderer.invoke("run_ocr", img_buffer, rollType),
   get_rolls: (weapon, element, rollType) => electron.ipcRenderer.invoke("get_rolls", weapon, element, rollType),
   get_keep_rolls: (keep_id) => electron.ipcRenderer.invoke("get_keep_rolls", keep_id),
   add_skill_roll: (pid, roll, roll_exists) => electron.ipcRenderer.invoke("add_skill_roll", pid, roll, roll_exists),
   delete_skill_roll: (pid, rollnum) => electron.ipcRenderer.invoke("delete_skill_roll", pid, rollnum),
+  add_amend_roll: (pid, roll, roll_exists) => electron.ipcRenderer.invoke("add_amend_roll", pid, roll, roll_exists),
+  delete_amend_roll: (pid, rollnum) => electron.ipcRenderer.invoke("delete_amend_roll", pid, rollnum),
   add_preference: (rt, pref) => electron.ipcRenderer.invoke("add_preference", rt, pref),
   edit_preference: (rt, orig, n) => electron.ipcRenderer.invoke("edit_preference", rt, orig, n),
   remove_preference: (rt, pref) => electron.ipcRenderer.invoke("remove_preference", rt, pref)

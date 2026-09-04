@@ -79,7 +79,7 @@ export const add_roll_to_stats = (set:any) => {
                 [w]: {
                     ...state.amend_bonus_stats[w]!,
                     [e]: {
-                        num_rolls: state.amend_bonus_stats[w]![e]!.num_rolls+1,
+                        num_rolls: rollExists ? state.amend_bonus_stats[w]![e]!.num_rolls : state.amend_bonus_stats[w]![e]!.num_rolls+1,
                         god_rolls: roll_type_other.is_desired_amend_roll(w, e, roll as bonus_roll, state.bonus_preferences) ? 
                             rollExists && state.amend_bonus_stats[w]![e]!.god_rolls.find(br => br.roll_num === roll.roll_num) ? 
                                 state.amend_bonus_stats[w]![e]!.god_rolls.map(br => br.roll_num === roll.roll_num ? {...br, roll: (roll as bonus_roll).roll} : br) : 
@@ -99,7 +99,7 @@ export const add_keep_roll_to_stats = (set:any) => {
         keep_bonus_stats: {
             ...state.keep_bonus_stats,
             [id]: {
-                num_rolls: state.keep_bonus_stats[id]!.num_rolls+1,
+                num_rolls: rollExists ? state.keep_bonus_stats[id]!.num_rolls : state.keep_bonus_stats[id]!.num_rolls+1,
                 god_rolls: roll_type_other.is_desired_keep_roll(roll, state.keep_bonus_profiles[id]!.canonical_target_reinforcement_levels) ? 
                     rollExists && state.keep_bonus_stats[id]!.god_rolls.find(kbr => kbr.roll_num === roll.roll_num) ? 
                         state.keep_bonus_stats[id]!.god_rolls.map(kbr => kbr.roll_num === roll.roll_num ? {...kbr, roll: roll.roll} : kbr) :

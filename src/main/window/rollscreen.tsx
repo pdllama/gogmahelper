@@ -11,10 +11,20 @@ import { menu as MenuType } from "@custom_types/menutype"
 import { roll_type } from "@custom_types/rolltype"
 import { skill_roll, bonus_roll, keep_bonus_roll } from "@custom_types/rolltype"
 import ChangeableRollNumberDisplay from "@components/display/rollscreen/generalcomponents/rollnumberdisplay"
+import { rolltabletypes } from "@components/display/rollscreen/rolltablecomponents/rolltablehandlersandtypes"
+
+type cond_skill_roll = rolltabletypes.cond_skill_roll;
+type cond_amend_roll = rolltabletypes.cond_amend_roll;
+type cond_keep_roll = rolltabletypes.cond_keep_roll;
 
 type RollScreenProps = {
     w:weapons,
     e:elements
+}
+
+export type editRollState = {
+    curr: number|null,
+    roll: cond_skill_roll|cond_amend_roll|cond_keep_roll|null
 }
 
 export type rollsDataState = {
@@ -33,9 +43,9 @@ export default function RollScreen({w, e}:RollScreenProps) {
     const rollType = menu === MenuType.skills ? roll_type.SKILLS : roll_type.BONUSES;
     const roll_num = useMainStore(state => rollType === roll_type.SKILLS ? state.skill_roll_num : state.bonus_roll_num)
     
+    const [edit, setEdit] = useState<editRollState>({curr: null, roll: null})
     const [rollsData, setRollsData] = useState<rollsDataState>({rolls: [], pid: 0, loadedRolls: false, addRollScreen: false})
     const {rolls, loadedRolls} = rollsData
-
     
     const bonus_type = useMainStore(state => state.bonus_type); // whether amend or keep
 
@@ -70,7 +80,7 @@ export default function RollScreen({w, e}:RollScreenProps) {
                 <img src={`icons/weapons/${w}.png`} className='h-fit' width='50px' height='50px'/>
                 <Text size='3xl' bold nowrap>{element_labels[e]} {weapon_labels[w]}</Text>
             </div>
-            <CaptureContainer rolls={rolls} pid={rollsData.pid} roll_num={roll_num} insertRoll={insertRoll} rollType={rollType} w={selected_weapon} e={selected_element}/>
+            <CaptureContainer rolls={rolls} pid={rollsData.pid} roll_num={roll_num} insertRoll={insertRoll} rollType={rollType} w={selected_weapon} e={selected_element} setEditRoll={setEdit}/>
             <div className="flex flex-col gap-1">
                 <Button disableRipple classes="w-fit" onClick={() => setRollsData({...rollsData, addRollScreen: !rollsData.addRollScreen})}>Add Roll</Button>
                 <ChangeableRollNumberDisplay
@@ -91,6 +101,8 @@ export default function RollScreen({w, e}:RollScreenProps) {
                 addRollScreen={rollsData.addRollScreen}
                 toggleAddRollScreen={() => setRollsData({...rollsData, addRollScreen: !rollsData.addRollScreen})}
                 w={selected_weapon} e={selected_element}
+                editRoll={edit}
+                setEditRoll={setEdit}
             />
         </div>
         </>

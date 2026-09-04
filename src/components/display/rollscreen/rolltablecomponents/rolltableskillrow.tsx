@@ -22,9 +22,10 @@ type RollTableSkillRowProps = {
     selected: boolean,
     editRollData: cond_skill_roll,
     editSkillRoll: (rollnum:number, type:"sb"|"gb", change:set_bonus_skill|group_bonus_skill|"") => void;
+    deleteRoll: (rollnum:number) => void
 }
 
-export default function RollTableSkillRow({rollNum, highlighted, desired, setSkill, groupSkill, selectRoll, selected, editRollData, editSkillRoll}:RollTableSkillRowProps) {
+export default function RollTableSkillRow({rollNum, highlighted, desired, setSkill, groupSkill, selectRoll, selected, editRollData, editSkillRoll, deleteRoll}:RollTableSkillRowProps) {
 
     // Both being empty means its a roll number without a 
     const emptySetSkill = !setSkill;
@@ -96,7 +97,11 @@ export default function RollTableSkillRow({rollNum, highlighted, desired, setSki
                 <Text classes={emptyGroupSkill ?"italic text-gray-400" : ""}>{emptyGroupSkill ? "none" : groupSkill}</Text>
                 }
             </td>
-            
+            {selected && 
+            <td className="absolute top-[108%] right-[-3px] rounded-b-sm py-2 px-6 bg-black z-10">
+                <Button disableRipple classes="bg-red-950" onClick={() => deleteRoll(rollNum)}>Delete Roll</Button>
+            </td>
+            }
         </tr>
     )
 }

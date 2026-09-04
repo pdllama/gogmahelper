@@ -14,6 +14,7 @@ import { VideoSettingsConfig } from "@custom_types/files/config";
 import { useShallow } from "zustand/shallow";
 import get_screen_dimensions from "@app/util/aspect_ratio_size";
 
+
 type MHWildsVideoProps = video_region & {
     wilds_width: number, wilds_height: number,
     saveRollTools: saveRollTools
@@ -42,6 +43,7 @@ export default function MhWildsVideo({
 
     const video_ref = useRef(null)
     const canvas_ref = useRef(null)
+    // const test_canvas_ref = useRef(null)
 
     const processor_ref = useRef<VideoProcessor|null>(null)
     
@@ -51,10 +53,12 @@ export default function MhWildsVideo({
         try {
             const video = video_ref.current! as HTMLVideoElement
             const canvas = canvas_ref.current! as HTMLCanvasElement;
+            // const test_canvas = test_canvas_ref.current! as HTMLCanvasElement
             // button_ref.current!.click();
-            start_capture(video, canvas, () => setError(true), () => {})
+            start_capture(video, canvas, rollType, () => setError(true), () => {})
     
             const processor = new VideoProcessor(
+                // video, canvas, test_canvas,
                 video, canvas, 
                 {x: display_x, y: display_y, width: display_width, height: display_height, scale: display_scale},
                 {x: detection_x, y: detection_y, width: detection_width, height: detection_height},
@@ -117,7 +121,7 @@ export default function MhWildsVideo({
                 () => {
                     setGettingVideo(true)
                     setTimeout(() => {
-                        start_capture(video_ref.current!, canvas_ref.current!, () => setError(true), () => setError(false))
+                        start_capture(video_ref.current!, canvas_ref.current!, rollType, () => setError(true), () => setError(false))
                         setGettingVideo(false)
                     }, 500)
                 }
@@ -133,8 +137,12 @@ export default function MhWildsVideo({
         <canvas 
             ref={canvas_ref} 
             className='hidden' 
-            style={{width: display_width, minWidth: display_width, height: display_height, minHeight: display_height}}
         />
+        {/* <canvas 
+            ref={test_canvas_ref}
+            className='hidden' 
+            style={{width: display_width, minWidth: display_width, height: display_height, minHeight: display_height}}
+        /> */}
         </>
     )
 }

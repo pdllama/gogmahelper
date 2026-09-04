@@ -3,7 +3,7 @@ import { dbInitString } from './db/db_init';
 import { gogma_database } from './db/app_init';
 
 
-import { group_bonus_skill, keep_bonus_stat, set_bonus_skill, weapon_bonus_stat, weapon_skill_stat, keep_bonus_profile, roll_type, skill_roll } from '@custom_types/rolltype';
+import { group_bonus_skill, keep_bonus_stat, set_bonus_skill, weapon_bonus_stat, weapon_skill_stat, keep_bonus_profile, roll_type, skill_roll, bonus_roll } from '@custom_types/rolltype';
 import { roll_type_other } from '@custom_types/rolltype';
 import { weapons } from '@custom_types/weapons';
 import { elements } from '@custom_types/element';
@@ -11,9 +11,10 @@ import { get_keep_rolls_query, get_rolls_query } from './db/db_getters';
 import { bonus_db_to_app, levels_db_to_app } from './util/bonuses_formats';
 import five_level_rolls = roll_type_other.five_level_rolls
 import five_reinforcement_rolls = roll_type_other.five_reinforcement_rolls
-import { addSkillRollQuery, deleteSkillRollQuery, updateSkillRollQuery } from './db/db_setters';
+import { addAmendRollQuery, addSkillRollQuery, deleteAmendRollQuery, deleteSkillRollQuery, updateAmendRollQuery, updateSkillRollQuery } from './db/db_setters';
 import { bonus_roll_preference, skill_roll_preference } from '@custom_types/preferences';
 import sanitizeSkillName from './util/sanitizeskillname';
+import { canonicalize_reinforcements } from './db/canonicalization';
 
 // Types of what gets sent back as a result of the db_query
 type skill_stats_query = {
@@ -175,14 +176,17 @@ class AppDatabase {
         const wpid = weapon_profile.profile_id
         const arr = this.db.prepare(get_rolls_query(rollType)).all(wpid);
         if (rollType === roll_type.BONUSES) {
-            return arr.map((item:any) => {
-                const reinforcement_levels_formatted = levels_db_to_app(item.reinforcement_levels)
-                return {
-                    roll_num: item.roll_num,
-                    roll: bonus_db_to_app(item.reinforcements).map((r, i) => {return {reinforcement: r, reinforcement_level: reinforcement_levels_formatted[i]}}),
-                    reinforcements_canonical: item.reinforcements_canonical
-                }
-            })
+            return {
+                rolls: arr.map((item:any) => {
+                    const reinforcement_levels_formatted = levels_db_to_app(item.reinforcement_levels)
+                    return {
+                        roll_num: item.roll_num,
+                        roll: bonus_db_to_app(item.reinforcements).map((r, i) => {return {bonus: r, level: reinforcement_levels_formatted[i]}}),
+                        reinforcements_canonical: item.reinforcements_canonical
+                    }
+                }),
+                profile_id: wpid.toString()
+            }
         }
         return {rolls: arr, profile_id: wpid.toString()}
         } catch(e) {
@@ -209,6 +213,15 @@ class AppDatabase {
     }
     remove_skill_roll(pid:number, roll_num:number) {
         this.db.exec(deleteSkillRollQuery(pid, roll_num));
+    }
+    add_amend_roll(pid:number, roll:bonus_roll, roll_exists:boolean) {
+        const {reinf, levels} = gogma_database.convert_bonus_roll_to_db(roll)
+        const canon_reinf = canonicalize_reinforcements(roll)
+        const queryString = roll_exists ? updateAmendRollQuery(pid, roll.roll_num, reinf, levels, canon_reinf) : addAmendRollQuery(pid, roll.roll_num, reinf, levels, canon_reinf)
+        this.db.exec(queryString)
+    }
+    remove_amend_roll(pid:number, roll_num:number) {
+        this.db.exec(deleteAmendRollQuery(pid, roll_num))
     }
 
 

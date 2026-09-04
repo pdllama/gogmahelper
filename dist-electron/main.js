@@ -1,9 +1,9 @@
-import { desktopCapturer, ipcMain, BrowserWindow, app, session } from "electron";
+import { desktopCapturer, ipcMain, BrowserWindow, nativeImage, app, session } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { readFile, writeFile } from "fs/promises";
-import { createWorker } from "tesseract.js";
+import { createWorker, PSM } from "tesseract.js";
 var weapons = /* @__PURE__ */ ((weapons2) => {
   weapons2["B"] = "bow";
   weapons2["CB"] = "charge_blade";
@@ -110,21 +110,19 @@ var roll_type_other;
     return true;
   };
   roll_type_other2.is_desired_skill_roll = (w, e, sr, preferences) => {
-    let hit_pref = false;
-    preferences.forEach((psr) => {
+    for (let psr of preferences) {
       if ((!psr.weapon || psr.weapon === w) && (!psr.element || psr.element === e) && sr.set_bonus === psr.set_bonus && sr.group_bonus === psr.group_bonus) {
-        hit_pref = true;
-        return;
+        return true;
       }
-    });
-    return hit_pref;
+    }
+    return false;
   };
   roll_type_other2.is_desired_amend_roll = (w, e, br, preferences) => {
-    preferences.forEach((pbr) => {
+    for (let pbr of preferences) {
       if ((!pbr.weapon || pbr.weapon === w) && (!pbr.element || pbr.element === e) && (0, roll_type_other2.compare_bonus_rolls)(br, pbr)) {
         return true;
       }
-    });
+    }
     return false;
   };
   roll_type_other2.is_desired_keep_roll = (kbr, preference) => {
@@ -335,6 +333,42 @@ var gogma_database;
     );
   }
   gogma_database2.convert_db_reinforcements_to_app = convert_db_reinforcements_to_app;
+  function convert_bonus_roll_to_db(roll) {
+    let reinf = "";
+    let levels = "";
+    roll.roll.forEach((r, i) => {
+      if (i !== 0) {
+        reinf += " ";
+        levels += " ";
+      }
+      reinf += r.bonus;
+      levels += r.level;
+    });
+    return { reinf, levels };
+  }
+  gogma_database2.convert_bonus_roll_to_db = convert_bonus_roll_to_db;
+  function convert_app_reinf_to_db(reinf) {
+    let str = "";
+    reinf.forEach((l, i) => {
+      if (i !== 0) {
+        str += " ";
+      }
+      str += l;
+    });
+    return str;
+  }
+  gogma_database2.convert_app_reinf_to_db = convert_app_reinf_to_db;
+  function convert_app_reinf_levels_to_db(levels) {
+    let str = "";
+    levels.forEach((l, i) => {
+      if (i !== 0) {
+        str += " ";
+      }
+      str += l;
+    });
+    return str;
+  }
+  gogma_database2.convert_app_reinf_levels_to_db = convert_app_reinf_levels_to_db;
 })(gogma_database || (gogma_database = {}));
 const get_rolls_query = (rollType) => `
     SELECT roll_num, ${rollType === "skills" ? "set_bonus, group_bonus" : "reinforcements, reinforcement_levels, reinforcements_canonical"} 
@@ -369,8 +403,33 @@ function deleteSkillRollQuery(pid, rollnum) {
     DELETE FROM skill_rolls WHERE profile_id = ${pid} AND roll_num = ${rollnum}
 `;
 }
+function addAmendRollQuery(pid, rollnum, reinforcements, levels, reinf_canon) {
+  return `
+    INSERT INTO amend_bonus_rolls(roll_num, profile_id, reinforcements, reinforcement_levels, reinforcements_canonical) VALUES (${rollnum}, ${pid}, '${reinforcements}', '${levels}', '${reinf_canon}') 
+`;
+}
+function updateAmendRollQuery(pid, rollnum, reinforcements, levels, reinf_canon) {
+  return `
+    UPDATE amend_bonus_rolls SET reinforcements = '${reinforcements}', reinforcement_levels = '${levels}', reinforcements_canonical = '${reinf_canon}' WHERE profile_id = ${pid} AND roll_num = ${rollnum}  
+`;
+}
+function deleteAmendRollQuery(pid, rollnum) {
+  return `
+    DELETE FROM amend_bonus_rolls WHERE profile_id = ${pid} AND roll_num = ${rollnum}
+`;
+}
 function sanitizeSkillName(skill) {
   return skill.indexOf("'") !== -1 ? `${skill.slice(0, skill.indexOf("'"))}''${skill.slice(skill.indexOf("'") + 1, skill.length)}` : skill;
+}
+const canonical_reinf_order = {
+  "ATTACK": 1,
+  "AFFINITY": 2,
+  "ELEMENT": 3,
+  "SHARPNESS/AMMO": 4
+};
+function canonicalize_reinforcements(roll) {
+  const n = roll.roll.map((r) => r.bonus).sort((a, b) => canonical_reinf_order[a] < canonical_reinf_order[b] ? -1 : 1);
+  return gogma_database.convert_app_reinf_to_db(n);
 }
 class AppDatabase {
   db;
@@ -465,16 +524,19 @@ class AppDatabase {
       const wpid = weapon_profile.profile_id;
       const arr = this.db.prepare(get_rolls_query(rollType)).all(wpid);
       if (rollType === roll_type.BONUSES) {
-        return arr.map((item) => {
-          const reinforcement_levels_formatted = levels_db_to_app(item.reinforcement_levels);
-          return {
-            roll_num: item.roll_num,
-            roll: bonus_db_to_app(item.reinforcements).map((r, i) => {
-              return { reinforcement: r, reinforcement_level: reinforcement_levels_formatted[i] };
-            }),
-            reinforcements_canonical: item.reinforcements_canonical
-          };
-        });
+        return {
+          rolls: arr.map((item) => {
+            const reinforcement_levels_formatted = levels_db_to_app(item.reinforcement_levels);
+            return {
+              roll_num: item.roll_num,
+              roll: bonus_db_to_app(item.reinforcements).map((r, i) => {
+                return { bonus: r, level: reinforcement_levels_formatted[i] };
+              }),
+              reinforcements_canonical: item.reinforcements_canonical
+            };
+          }),
+          profile_id: wpid.toString()
+        };
       }
       return { rolls: arr, profile_id: wpid.toString() };
     } catch (e) {
@@ -498,6 +560,15 @@ class AppDatabase {
   }
   remove_skill_roll(pid, roll_num) {
     this.db.exec(deleteSkillRollQuery(pid, roll_num));
+  }
+  add_amend_roll(pid, roll, roll_exists) {
+    const { reinf, levels } = gogma_database.convert_bonus_roll_to_db(roll);
+    const canon_reinf = canonicalize_reinforcements(roll);
+    const queryString = roll_exists ? updateAmendRollQuery(pid, roll.roll_num, reinf, levels, canon_reinf) : addAmendRollQuery(pid, roll.roll_num, reinf, levels, canon_reinf);
+    this.db.exec(queryString);
+  }
+  remove_amend_roll(pid, roll_num) {
+    this.db.exec(deleteAmendRollQuery(pid, roll_num));
   }
   add_preference(rt, pref) {
     if (rt === roll_type.SKILLS) {
@@ -662,14 +733,53 @@ function get_state_settings(config, rollType) {
   settings.read_delay = path2[`${rollType}_read_delay`];
   return settings;
 }
+function splitImageBuffer(img_buffer) {
+  const fullImage = nativeImage.createFromBuffer(img_buffer, { width: 350, height: 160 });
+  const baseRowsPerPiece = Math.floor(160 / 5);
+  let remainderRows = 160 % 5;
+  let currentTop = 0;
+  const pieces = [];
+  for (let i = 0; i < 5; i++) {
+    const currentPieceHeight = baseRowsPerPiece + (remainderRows > 0 ? 1 : 0);
+    remainderRows--;
+    const croppedZone = fullImage.crop({
+      x: 0,
+      y: currentTop,
+      width: 350,
+      height: currentPieceHeight
+    });
+    const outputPngBuffer = croppedZone.toPNG();
+    pieces.push({
+      buffer: outputPngBuffer,
+      width: 350,
+      height: currentPieceHeight
+    });
+    currentTop += currentPieceHeight;
+  }
+  return pieces;
+}
 let tesseract_worker = null;
-async function run_ocr(img_buffer) {
+async function run_ocr(img_buffer, rollType) {
   if (!tesseract_worker) {
     tesseract_worker = await createWorker("eng");
+    await tesseract_worker.setParameters({
+      tessedit_pageseg_mode: PSM.SINGLE_BLOCK
+    });
   }
   try {
-    const { data: { text } } = await tesseract_worker.recognize(img_buffer);
-    return text.trim();
+    if (rollType === roll_type.SKILLS) {
+      const { data: { text } } = await tesseract_worker.recognize(img_buffer);
+      return text.trim();
+    } else {
+      const img_buffers = splitImageBuffer(img_buffer);
+      const texts = [];
+      for (let i = 0; i < 5; i++) {
+        const b = img_buffers[i];
+        const { data: { text } } = await tesseract_worker.recognize(b.buffer);
+        texts.push(text.trim());
+      }
+      return texts;
+    }
   } catch (error) {
     console.error("OCR Failed: ", error);
     return "";
@@ -738,11 +848,13 @@ app.whenReady().then(() => {
   ipcMain.handle("remove_weapon", (_, weapon, rollType) => db.remove_weapon(weapon, rollType));
   ipcMain.handle("remove_combo", (_, weapon, element, rollType) => db.remove_combo(weapon, element, rollType));
   ipcMain.handle("get_mh_wilds_window_id", async () => get_mh_wilds_window_id());
-  ipcMain.handle("run_ocr", async (_, img_buffer) => run_ocr(img_buffer));
+  ipcMain.handle("run_ocr", async (_, img_buffer, rollType) => run_ocr(img_buffer, rollType));
   ipcMain.handle("get_rolls", async (_, weapon, element, rollType) => db.get_rolls(weapon, element, rollType));
   ipcMain.handle("get_keep_rolls", async (_, keep_id) => db.get_keep_rolls(keep_id));
   ipcMain.handle("add_skill_roll", async (_, pid, roll, roll_exists) => db.add_skill_roll(pid, roll, roll_exists));
   ipcMain.handle("delete_skill_roll", async (_, pid, rollnum) => db.remove_skill_roll(pid, rollnum));
+  ipcMain.handle("add_amend_roll", async (_, pid, roll, roll_exists) => db.add_amend_roll(pid, roll, roll_exists));
+  ipcMain.handle("delete_amend_roll", async (_, pid, rollnum) => db.remove_amend_roll(pid, rollnum));
   ipcMain.handle("add_preference", async (_, rt, pref) => db.add_preference(rt, pref));
   ipcMain.handle("edit_preference", async (_, rt, orig, n) => db.edit_preference(rt, orig, n));
   ipcMain.handle("remove_preference", async (_, rt, pref) => db.remove_preference(rt, pref));

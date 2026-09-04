@@ -5,7 +5,7 @@
 //  3. Getting the skill and bonus roll preferences. 
 
 import { elements } from "@custom_types/element"
-import { reinforcement, reinforcement_level } from "@custom_types/rolltype";
+import { bonus_roll, bonus_type, reinforcement, reinforcement_level } from "@custom_types/rolltype";
 import { roll_type_other } from "@custom_types/rolltype";
 import five_bonus_rolls = roll_type_other.five_bonus_rolls
 import five_level_rolls = roll_type_other.five_level_rolls
@@ -142,4 +142,34 @@ export namespace gogma_database {
                 ) as five_bonus_rolls
     }
 
+    export function convert_bonus_roll_to_db(roll:bonus_roll) : {reinf: string, levels: string} {
+        let reinf = ''
+        let levels = ''
+
+        roll.roll.forEach((r:bonus_type, i:number) => {
+            if (i !== 0) {reinf+=" "; levels+=" "}
+            reinf+=r.bonus;
+            levels+=r.level
+        })
+
+        return {reinf, levels}
+    }
+
+    export function convert_app_reinf_to_db(reinf:roll_type_other.five_reinforcement_rolls) {
+        let str = ''
+        reinf.forEach((l:reinforcement, i:number) => {
+            if (i !== 0) {str+=" "}
+            str += l
+        })
+        return str
+    }
+
+    export function convert_app_reinf_levels_to_db(levels:roll_type_other.five_level_rolls) {
+        let str = ''
+        levels.forEach((l:reinforcement_level, i:number) => {
+            if (i !== 0) {str+=" "}
+            str += l
+        })
+        return str
+    }
 }

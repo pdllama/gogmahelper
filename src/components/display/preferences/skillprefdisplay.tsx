@@ -65,6 +65,11 @@ export default function SkillPrefDisplay({w, e, set_bonus, group_bonus, pref_ind
         add_alert({title: "Deleted the Skill Preference!", content: '', timeout: 3, type:'success'})
     }
 
+    const used_w_value = mode.mode === 'edit' ? mode.w : w
+    const used_e_value = mode.mode === 'edit' ? mode.e : e
+    const used_set = mode.mode === "edit" ? mode.set_bonus : set_bonus
+    const used_group = mode.mode === "edit" ? mode.group_bonus : group_bonus
+
     return (
         <PreferenceDisplayWrapper classes="h-[225px] relative overflow-hidden">
             <div className="size-full flex flex-col items-center p-2 gap-2">
@@ -82,7 +87,7 @@ export default function SkillPrefDisplay({w, e, set_bonus, group_bonus, pref_ind
                     <div className="flex flex-col items-center gap-1 w-1/2">
                         <Text size="md" bold>Weapon</Text>
                         <div className={`size-full flex justify-center items-center relative ${section_height}`}>
-                            <img src={`public/icons/weapons/${!mode.w ? "all" : mode.w}.png`} style={{height: '100%', opacity: 0.15, position: 'absolute'}}/>
+                            <img src={`/icons/weapons/${!used_w_value ? "all" : used_w_value}.png`} style={{height: '100%', opacity: 0.15, position: 'absolute'}}/>
                             {mode.mode === "edit" ? 
                             <Select 
                                 selected={mode.w === null ? '' : mode.w} 
@@ -92,14 +97,14 @@ export default function SkillPrefDisplay({w, e, set_bonus, group_bonus, pref_ind
                                 on_change={(value:weapons|"") => setMode({...mode, w:value === "" ? null : value})}
                                 on_focus={() => setError(null)}
                             />:
-                            <Text size='lg' bold>{!mode.w ? "Any" : weapon_labels[mode.w]}</Text>
+                            <Text size='lg' bold>{!used_w_value ? "Any" : weapon_labels[used_w_value]}</Text>
                             }
                         </div>
                     </div>
                     <div className="flex flex-col items-center gap-1 w-1/2">
                         <Text size="md" bold>Element</Text>
                         <div className={`size-full flex justify-center items-center relative ${section_height}`}>
-                            <img src={`public/icons/elements/${!mode.e ? "all" : mode.e}.png`} style={{height: '100%', opacity: 0.15, position: 'absolute'}}/>
+                            <img src={`/icons/elements/${!used_e_value ? "all" : used_e_value}.png`} style={{height: '100%', opacity: 0.15, position: 'absolute'}}/>
                             {mode.mode === "edit" ? 
                             <Select 
                                 selected={mode.e === null ? '' : mode.e} 
@@ -109,7 +114,7 @@ export default function SkillPrefDisplay({w, e, set_bonus, group_bonus, pref_ind
                                 on_change={(value:elements|"") => setMode({...mode, e:value === "" ? null : value})}
                                 on_focus={() => setError(null)}
                             /> : 
-                            <Text size='lg' bold>{!mode.e ? "Any" : element_labels[mode.e]}</Text>
+                            <Text size='lg' bold>{!used_e_value? "Any" : element_labels[used_e_value]}</Text>
                             }
                         </div>
                     </div>
@@ -125,7 +130,7 @@ export default function SkillPrefDisplay({w, e, set_bonus, group_bonus, pref_ind
                         on_change={(value:set_bonus_skill) => setMode({...mode, set_bonus: value})}
                         on_focus={() => setError(null)}
                     /> : 
-                    <Text size='sm' nowrap>{mode.set_bonus}</Text>
+                    <Text size='sm' nowrap>{used_set}</Text>
                     }
                 </div>
                 <div className="w-full flex gap-2">
@@ -139,7 +144,7 @@ export default function SkillPrefDisplay({w, e, set_bonus, group_bonus, pref_ind
                         on_change={(value:group_bonus_skill) => setMode({...mode, group_bonus: value})}
                         on_focus={() => setError(null)}
                     /> :
-                        <Text size='sm' nowrap>{mode.group_bonus}</Text>
+                        <Text size='sm' nowrap>{used_group}</Text>
                     }
                 </div>
                 <div className="w-full flex justify-end gap-2">
@@ -152,7 +157,7 @@ export default function SkillPrefDisplay({w, e, set_bonus, group_bonus, pref_ind
                     <Text size={12} bold nowrap classes="text-red-300">{error}</Text> :
                     <>
                     <Button disableRipple classes="py-0 text-[14px] mt-[-4px]" onClick={finalizeEdit}>Finalize Edit</Button>
-                    <Button disableRipple classes="py-0 text-[14px] mt-[-4px]" onClick={() => setMode(state => {return {...state, mode: "none"}})}>Cancel</Button>
+                    <Button disableRipple classes="py-0 text-[14px] mt-[-4px]" onClick={() => setMode({mode: "none", w, e, set_bonus, group_bonus})}>Cancel</Button>
                     </>
                     }
                 </div>

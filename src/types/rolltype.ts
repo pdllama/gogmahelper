@@ -67,7 +67,7 @@ export type skill_roll = {
     group_bonus: group_bonus_skill
 }
 
-type bonus_type = {
+export type bonus_type = {
     bonus: reinforcement,
     level: reinforcement_level
 }
@@ -111,11 +111,14 @@ export namespace roll_type_other {
     export const compare_bonus_rolls = (br1:bonus_roll, br2:{weapon:weapons|null, element: elements|null, reinforcements:roll_type_other.five_reinforcement_rolls}) => {
         // Returns true if br1 reinforcements === br2 reinforcements. Returns false otherwise
         let matchedIndices:Set<number> = new Set<number>;
+        
         for (let bt of br1.roll) {
             const i = br2.reinforcements.findIndex((bonus:reinforcement, i:number) => {
                 return !matchedIndices.has(i) && bonus == bt.bonus
             })
-            if (i == -1) {return false}
+            if (i == -1) {
+                return false
+            }
             else {matchedIndices.add(i)}
         }
         return true
@@ -135,22 +138,21 @@ export namespace roll_type_other {
     }
 
     export const is_desired_skill_roll = (w:weapons, e:elements, sr:skill_roll, preferences:skill_rolls_array) => {
-        let hit_pref = false
-        preferences.forEach(psr => {
+
+        for (let psr of preferences) {
             if ((!psr.weapon || psr.weapon === w) && (!psr.element || psr.element === e) && (sr.set_bonus === psr.set_bonus) && (sr.group_bonus === psr.group_bonus)) {
-                hit_pref = true
-                return;
+                return true
             }
-        })
-        return hit_pref
+        }
+        return false
     }
 
     export const is_desired_amend_roll = (w:weapons, e:elements, br:bonus_roll, preferences:bonus_rolls_array) => {
-        preferences.forEach(pbr => {
+        for (let pbr of preferences) {
             if ((!pbr.weapon || pbr.weapon === w) && (!pbr.element || pbr.element === e) && (compare_bonus_rolls(br, pbr))) {
                 return true
             } 
-        })
+        }
         return false
     }
 

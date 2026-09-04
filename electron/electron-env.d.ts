@@ -36,12 +36,14 @@ interface api {
   open_video_settings(rollType:roll_type): Promise<any>
   get_vs_init_state(): Promise<any>
 
-  run_ocr(img_buffer:any): Promise<string>
+  run_ocr(img_buffer:any, rollType:roll_type): Promise<string|string[]>
   get_rolls(weapon:weapons, element:elements, rollType:roll_type): Promise<Any>
   get_keep_rolls(keep_id: string): Promise<Array<any>>
 
   add_skill_roll(pid:number, roll:skill_roll, roll_exists:boolean): void
   delete_skill_roll(pid:number, rollnum:number): void
+  add_amend_roll(pid:number, roll:bonus_roll, roll_exists:boolean): void
+  delete_amend_roll(pid:number, rollnum:number): void
 
   add_preference: (rt:roll_type, pref:skill_roll_preference|bonus_roll_preference) => Promise<any>
   edit_preference: (rt:roll_type, orig:skill_roll_preference|bonus_roll_preference, n:skill_roll_preference|bonus_roll_preference) => Promise<any>

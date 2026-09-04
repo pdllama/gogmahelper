@@ -10,3 +10,20 @@
 .del-but-pos {
     top: calc(100% + 3px);
 }
+
+
+@keyframes flash-error {
+    0% {
+        background-color: #460809;
+    }
+    40% {
+        background-color: #ad9893;
+    }
+    100% {
+        background-color: #460809;
+    }
+}
+
+.capture-container-error {
+    animation: 1s forwards flash-error;
+}

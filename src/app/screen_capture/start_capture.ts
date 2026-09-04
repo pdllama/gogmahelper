@@ -1,6 +1,7 @@
+import { roll_type } from "@custom_types/rolltype";
 import { WindowNotFound } from "./errors";
 
-export default async function start_capture(video_element:HTMLVideoElement, canvas:HTMLCanvasElement, flag_error:() => void, reset_error: () => void) {
+export default async function start_capture(video_element:HTMLVideoElement, canvas:HTMLCanvasElement, rollType:roll_type, flag_error:() => void, reset_error: () => void) {
 
     const mh_wilds_window_id = await window.ipcRenderer.get_mh_wilds_window_id()
 
@@ -38,7 +39,7 @@ export default async function start_capture(video_element:HTMLVideoElement, canv
         }
 
         canvas.width = 350; 
-        canvas.height = 70;
+        canvas.height = rollType === roll_type.SKILLS ? 70 : 160;
 
         reset_error()
 

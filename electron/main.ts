@@ -5,7 +5,7 @@ import AppDatabase from '../src/app/database'
 import Database from 'better-sqlite3'
 import { weapons } from '@custom_types/weapons'
 import { elements } from '@custom_types/element'
-import { roll_type, skill_roll } from '@custom_types/rolltype'
+import { roll_type, skill_roll, bonus_roll } from '@custom_types/rolltype'
 import { skill_roll_preference, bonus_roll_preference } from '@custom_types/preferences'
 import get_mh_wilds_window_id from './handlers/get_mh_wilds_id'
 import open_video_settings_window from './handlers/open_video_settings'
@@ -107,12 +107,14 @@ app.whenReady().then(() => {
   ipcMain.handle('remove_combo', (_:any, weapon:weapons, element:elements, rollType:roll_type) => db.remove_combo(weapon, element, rollType))
 
   ipcMain.handle('get_mh_wilds_window_id', async() => get_mh_wilds_window_id())
-  ipcMain.handle('run_ocr', async(_:any, img_buffer:Buffer) => run_ocr(img_buffer))
+  ipcMain.handle('run_ocr', async(_:any, img_buffer:Buffer, rollType:roll_type) => run_ocr(img_buffer, rollType))
   ipcMain.handle('get_rolls', async(_:any, weapon:weapons, element:elements, rollType:roll_type) => db.get_rolls(weapon, element, rollType))
   ipcMain.handle('get_keep_rolls', async(_:any, keep_id:string) => db.get_keep_rolls(keep_id))
 
   ipcMain.handle('add_skill_roll', async(_:any, pid:number, roll:skill_roll, roll_exists:boolean) => db.add_skill_roll(pid, roll, roll_exists))
   ipcMain.handle('delete_skill_roll', async(_:any, pid:number, rollnum:number) => db.remove_skill_roll(pid, rollnum))
+  ipcMain.handle('add_amend_roll', async(_:any, pid:number, roll:bonus_roll, roll_exists:boolean) => db.add_amend_roll(pid, roll, roll_exists))
+  ipcMain.handle('delete_amend_roll', async(_:any, pid: number, rollnum:number) => db.remove_amend_roll(pid, rollnum))
 
 
   ipcMain.handle('add_preference', async(_:any, rt:roll_type, pref:skill_roll_preference|bonus_roll_preference) => db.add_preference(rt, pref))
